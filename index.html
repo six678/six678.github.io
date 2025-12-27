@@ -3,7 +3,7 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
-    <title>澳门六合彩</title>  
+    <title>澳门六合彩开奖记录</title>  
     <script src="https://cdn.tailwindcss.com"></script>  
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>  
     <style>  
@@ -13,7 +13,6 @@
             display: flex; align-items: center; justify-content: center;  
             border-radius: 50%; color: white; font-weight: bold; font-size: 1.1rem;  
             box-shadow: 0 3px 6px rgba(0,0,0,0.15);  
-            position: relative;  
         }  
         .bg-red { background: linear-gradient(135deg, #ff5f6d, #ff3131); }  
         .bg-blue { background: linear-gradient(135deg, #2193b0, #6dd5ed); }  
@@ -25,83 +24,46 @@
   
 <div x-data="lotteryApp()" x-init="init()" class="max-w-md mx-auto">  
       
-    <!-- 顶部导航 -->  
     <header class="bg-indigo-700 text-white px-4 py-4 sticky top-0 z-50 shadow-lg">  
-        <div class="flex justify-between items-center">  
-            <h1 class="text-xl font-black italic tracking-wider">MACAU LOTTERY</h1>  
-            <div class="flex items-center space-x-2">  
-                <!-- 年份选择 -->  
-                <select x-model="currentYear" @change="fetchHistory()" class="bg-indigo-600 text-sm rounded border-none px-2 py-1 focus:ring-0">  
-                    <template x-for="y in years" :key="y">  
-                        <option :value="y" x-text="y + '年'"></option>  
-                    </template>  
-                </select>  
-                <button @click="init()" class="p-1">  
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">  
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />  
-                    </svg>  
-                </button>  
-            </div>  
-        </div>  
+        <h1 class="text-xl font-black italic tracking-wider text-center">MACAU LOTTERY</h1>  
     </header>  
   
-    <!-- 状态提示 -->  
-    <div x-show="loading" class="text-center py-10">  
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div>  
-        <p class="mt-2 text-gray-500">正在获取最新开奖数据...</p>  
-    </div>  
+    <div x-show="loading" class="text-center py-10 text-gray-500">数据加载中...</div>  
   
-    <!-- 主体内容 -->  
     <div x-show="!loading" x-cloak class="p-3">  
-          
-        <!-- 最新一期直播/结果 -->  
-        <template x-if="liveData">  
+        <!-- 最新一期 -->  
+        <template x-if="records.length > 0">  
             <div class="bg-white rounded-2xl shadow-md overflow-hidden mb-4 border-2 border-indigo-100">  
                 <div class="bg-indigo-50 px-4 py-2 border-b border-indigo-100 flex justify-between items-center">  
-                    <span class="text-indigo-800 font-bold">最新第 <span x-text="liveData.expect"></span> 期</span>  
-                    <span class="text-xs text-gray-400" x-text="liveData.openTime"></span>  
+                    <span class="text-indigo-800 font-bold">最新第 <span x-text="records[0].expect"></span> 期</span>  
+                    <span class="text-xs text-gray-400" x-text="records[0].openTime"></span>  
                 </div>  
                 <div class="p-4 flex justify-between items-center">  
-                    <template x-for="(ball, index) in liveData.balls" :key="index">  
+                    <template x-for="ball in formatBalls(records[0])" :key="ball.num">  
                         <div class="flex flex-col items-center">  
                             <div :class="'ball bg-' + ball.color" x-text="ball.num"></div>  
                             <span class="zodiac" x-text="ball.zodiac"></span>  
                         </div>  
                     </template>  
-                    <div class="text-xl font-bold text-gray-300 mx-1">+</div>  
-                    <div class="flex flex-col items-center">  
-                        <div :class="'ball bg-' + liveData.special.color" x-text="liveData.special.num"></div>  
-                        <span class="zodiac" x-text="liveData.special.zodiac"></span>  
-                    </div>  
                 </div>  
             </div>  
         </template>  
   
-        <!-- 历史列表 -->  
-        <h2 class="text-gray-500 text-sm font-bold ml-2 mb-2 flex items-center">  
-            <span class="w-1 h-4 bg-indigo-500 inline-block mr-2"></span>  
-            往期开奖记录  
-        </h2>  
-          
+        <!-- 历史纪录 -->  
         <div class="space-y-3">  
-            <template x-for="(item, index) in historyData" :key="index">  
+            <template x-for="(item, index) in records.slice(1)" :key="index">  
                 <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">  
                     <div class="flex justify-between items-center mb-2">  
                         <span class="text-sm font-bold text-gray-700">第 <span x-text="item.expect"></span> 期</span>  
-                        <span class="text-xs text-gray-400" x-text="item.openTime.split(' ')[0]"></span>  
+                        <span class="text-xs text-gray-400" x-text="item.openTime"></span>  
                     </div>  
                     <div class="flex items-center space-x-2">  
-                        <template x-for="ball in item.balls">  
+                        <template x-for="ball in formatBalls(item)">  
                             <div class="flex flex-col items-center scale-90">  
                                 <div :class="'w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold bg-' + ball.color" x-text="ball.num"></div>  
                                 <span class="text-[10px] text-gray-400 mt-1" x-text="ball.zodiac"></span>  
                             </div>  
                         </template>  
-                        <span class="text-gray-300 text-xs">+</span>  
-                        <div class="flex flex-col items-center scale-90">  
-                            <div :class="'w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold bg-' + item.special.color" x-text="item.special.num"></div>  
-                            <span class="text-[10px] text-gray-400 mt-1" x-text="item.special.zodiac"></span>  
-                        </div>  
                     </div>  
                 </div>  
             </template>  
@@ -113,59 +75,26 @@
 function lotteryApp() {  
     return {  
         loading: true,  
-        liveData: null,  
-        historyData: [],  
-        currentYear: new Date().getFullYear(),  
-        years: [2025, 2024, 2023, 2022, 2021, 2020],  
-          
+        records: [],  
         async init() {  
-            this.loading = true;  
-            await Promise.all([this.fetchLive(), this.fetchHistory()]);  
+            try {  
+                // 直接请求本地 GitHub 仓库里的 data.json  
+                const res = await fetch('data.json?t=' + Date.now());  
+                this.records = await res.json();  
+            } catch (e) {  
+                console.error("加载数据失败");  
+            }  
             this.loading = false;  
         },  
-  
-        // 处理 API 返回的数据格式  
-        formatItem(item) {  
+        formatBalls(item) {  
             const codes = item.openCode.split(',');  
             const waves = item.wave.split(',');  
             const zodiacs = item.zodiac.split(',');  
-              
-            let balls = [];  
-            for (let i = 0; i < 6; i++) {  
-                balls.push({ num: codes[i], color: waves[i], zodiac: zodiacs[i] });  
-            }  
-              
-            return {  
-                expect: item.expect,  
-                openTime: item.openTime,  
-                balls: balls,  
-                special: { num: codes[6], color: waves[6], zodiac: zodiacs[6] }  
-            };  
-        },  
-  
-        async fetchLive() {  
-            try {  
-                const res = await fetch('https://macaumarksix.com/api/live2');  
-                const data = await res.json();  
-                if (data && data.length > 0) {  
-                    this.liveData = this.formatItem(data[0]);  
-                }  
-            } catch (e) {  
-                console.error("直播接口调用失败", e);  
-            }  
-        },  
-  
-        async fetchHistory() {  
-            try {  
-                const res = await fetch(`https://history.macaumarksix.com/history/macaujc2/y/${this.currentYear}`);  
-                const json = await res.json();  
-                if (json.result && json.data) {  
-                    // 过滤掉已经在最新一期显示的记录，并展示  
-                    this.historyData = json.data.map(item => this.formatItem(item));  
-                }  
-            } catch (e) {  
-                console.error("历史接口调用失败", e);  
-            }  
+            return codes.map((code, i) => ({  
+                num: code,  
+                color: waves[i],  
+                zodiac: zodiacs[i]  
+            }));  
         }  
     }  
 }  
