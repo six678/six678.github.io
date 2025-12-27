@@ -1,3 +1,44 @@
-<html>
-hello
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            transition: background 0.5s;
+        }
+        h1 {
+            font-size: 4rem;
+            margin: 0;
+        }
+        p {
+            font-size: 1.5rem;
+            margin-top: 10px;
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 3rem;
+            }
+            p {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Hello!</h1>
+        <p>Welcome！</p>
+    </div>
+</body>
 </html>
