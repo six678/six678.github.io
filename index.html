@@ -12,24 +12,53 @@
             width: 38px; height: 38px;  
             display: flex; align-items: center; justify-content: center;  
             border-radius: 50%; color: white; font-weight: bold; font-size: 1.1rem;  
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);  
+            /* 去除阴影 */  
+            border: 2px solid rgba(0,0,0,0.1);  
         }  
-        .bg-red { background: linear-gradient(180deg, #ff5f6d, #ff3131); }  
-        .bg-blue { background: linear-gradient(180deg, #2193b0, #6dd5ed); }  
-        .bg-green { background: linear-gradient(180deg, #11998e, #38ef7d); }  
-        .zodiac { font-size: 0.75rem; color: #555; margin-top: 4px; font-weight: bold; }  
+        /* 扁平化纯色背景 */  
+        .bg-red { background-color: #e74c3c; }  
+        .bg-blue { background-color: #3498db; }  
+        .bg-green { background-color: #2ecc71; }  
+        .zodiac { font-size: 0.75rem; color: #666; margin-top: 4px; font-weight: bold; }  
         .special-plus { font-size: 1.2rem; font-weight: bold; color: #999; margin: 0 4px; }  
+          
+        /* 扁平化卡片样式 */  
+        .flat-card {  
+            background: white;  
+            border: 1px solid #e0e0e0;  
+            border-radius: 0;  
+        }  
+        .flat-header {  
+            background: #f5f5f5;  
+            border-bottom: 1px solid #e0e0e0;  
+        }  
+        .flat-button {  
+            background: #3f51b5;  
+            border-radius: 0;  
+            border: none;  
+        }  
+        .flat-select {  
+            background: white;  
+            border: 1px solid #e0e0e0;  
+            border-radius: 0;  
+        }  
+        .flat-border {  
+            border: 1px solid #e0e0e0;  
+        }  
+        .flat-divider {  
+            border-top: 1px dashed #e0e0e0;  
+        }  
     </style>  
 </head>  
-<body class="bg-gray-100 min-h-screen">  
+<body class="bg-gray-50 min-h-screen">  
   
-<div x-data="lotteryApp()" x-init="init()" class="max-w-md mx-auto min-h-screen bg-gray-50 flex flex-col">  
+<div x-data="lotteryApp()" x-init="init()" class="max-w-md mx-auto min-h-screen bg-white flex flex-col">  
       
-    <!-- 顶部导航 -->  
-    <header class="bg-indigo-700 text-white px-4 py-3 sticky top-0 z-50 shadow-md flex justify-between items-center">  
-        <h1 class="text-lg font-black tracking-tighter">MACAU JC</h1>  
-        <div class="flex items-center bg-indigo-800 rounded-lg px-2">  
-            <select x-model="selectedYear" @change="resetPagination()" class="bg-transparent text-sm py-1 outline-none border-none text-white">  
+    <!-- 顶部导航 - 扁平化 -->  
+    <header class="bg-indigo-600 text-white px-4 py-3 sticky top-0 z-50 flex justify-between items-center flat-border">  
+        <h1 class="text-lg font-bold">MACAU JC</h1>  
+        <div class="flex items-center bg-white rounded-none px-2 flat-border">  
+            <select x-model="selectedYear" @change="resetPagination()" class="bg-transparent text-sm py-1 outline-none border-none text-indigo-600 font-medium">  
                 <template x-for="y in years" :key="y">  
                     <option :value="y" x-text="y + '年'" class="text-black"></option>  
                 </template>  
@@ -46,20 +75,20 @@
     <!-- 主体内容 -->  
     <div x-show="!loading" x-cloak class="p-3 flex-1">  
           
-        <!-- 【修复点】最新一期卡片：显示当前筛选年份的第一条记录 -->  
+        <!-- 最新一期卡片：扁平化 -->  
         <template x-if="filteredRecords.length > 0">  
-            <div class="bg-white rounded-2xl shadow-md overflow-hidden mb-5 border-2 border-indigo-100">  
-                <div class="bg-indigo-50 px-4 py-2 flex justify-between items-center">  
-                    <div>  
-                        <span class="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full mr-1">最新</span>  
+            <div class="flat-card mb-5">  
+                <div class="flat-header px-4 py-2 flex justify-between items-center">  
+                    <div>    
+                        <span class="bg-indigo-600 text-white text-[10px] px-2 py-0.5 mr-1">最新</span>  
                         <span class="text-indigo-800 font-bold">第 <span x-text="filteredRecords[0].expect"></span> 期</span>  
                     </div>  
-                    <span class="text-[11px] text-gray-400" x-text="filteredRecords[0].openTime"></span>  
+                    <span class="text-[11px] text-gray-500" x-text="filteredRecords[0].openTime"></span>  
                 </div>  
-                <div class="p-4 flex justify-between items-center">  
+                <div class="p-4 flex justify-between items-center">    
                     <!-- 显示前6个球 -->  
-                    <template x-for="(ball, index) in formatBalls(filteredRecords[0]).slice(0,6)" :key="index">  
-                        <div class="flex flex-col items-center">  
+                    <template x-for="(ball, index) in formatBalls(filteredRecords[0]).slice(0,6)" :key="index">    
+                        <div class="flex flex-col items-center">    
                             <div :class="'ball bg-' + ball.color" x-text="ball.num"></div>  
                             <span class="zodiac" x-text="ball.zodiac"></span>  
                         </div>  
@@ -67,7 +96,7 @@
                     <!-- 特码分隔符 -->  
                     <div class="special-plus">+</div>  
                     <!-- 显示特码 -->  
-                    <div class="flex flex-col items-center">  
+                    <div class="flex flex-col items-center">    
                         <div :class="'ball bg-' + formatBalls(filteredRecords[0])[6].color" x-text="formatBalls(filteredRecords[0])[6].num"></div>  
                         <span class="zodiac" x-text="formatBalls(filteredRecords[0])[6].zodiac"></span>  
                     </div>  
@@ -77,23 +106,23 @@
   
         <h2 class="text-gray-500 text-[10px] font-bold ml-2 mb-2 uppercase tracking-[0.2em]">历史纪录回顾</h2>  
   
-        <!-- 历史列表 -->  
+        <!-- 历史列表 - 扁平化 -->  
         <div class="space-y-3">  
             <template x-for="(item, index) in displayedRecords" :key="item.expect">  
                 <!-- 列表里跳过当前年份的第一条（因为上面已经大卡片展示了） -->  
-                <div x-show="index !== 0" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">  
-                    <div class="flex justify-between items-center mb-2">  
-                        <span class="text-xs font-bold text-gray-400">第 <span x-text="item.expect"></span> 期</span>  
-                        <span class="text-[10px] text-gray-300" x-text="item.openTime.split(' ')[0]"></span>  
+                <div x-show="index !== 0" class="flat-card p-3">  
+                    <div class="flex justify-between items-center mb-2 flat-divider pb-2">  
+                        <span class="text-xs font-bold text-gray-500">第 <span x-text="item.expect"></span> 期</span>  
+                        <span class="text-[10px] text-gray-400" x-text="item.openTime.split(' ')[0]"></span>  
                     </div>  
-                    <div class="flex items-center justify-between">  
-                        <template x-for="(ball, bIndex) in formatBalls(item)" :key="bIndex">  
-                            <div class="flex items-center">  
+                    <div class="flex items-center justify-between pt-1">    
+                        <template x-for="(ball, bIndex) in formatBalls(item)" :key="bIndex">    
+                            <div class="flex items-center">    
                                 <!-- 在第7个球前加个小加号 -->  
-                                <template x-if="bIndex === 6">  
-                                    <span class="text-gray-200 mr-1 text-xs">+</span>  
+                                <template x-if="bIndex === 6">    
+                                    <span class="text-gray-300 mr-1 text-xs">+</span>  
                                 </template>  
-                                <div class="flex flex-col items-center scale-90">  
+                                <div class="flex flex-col items-center scale-90">    
                                     <div :class="'w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold bg-' + ball.color" x-text="ball.num"></div>  
                                     <span class="text-[10px] text-gray-400 mt-0.5" x-text="ball.zodiac"></span>  
                                 </div>  
@@ -104,7 +133,7 @@
             </template>  
         </div>  
   
-        <!-- 滚动加载监听 -->  
+        <!-- 滚动加载监听 - 扁平化 -->  
         <div id="infinite-sentinel" class="h-20 flex items-center justify-center text-gray-400 text-xs">  
             <template x-if="hasMore">  
                 <div class="flex items-center">  
@@ -134,9 +163,12 @@ function lotteryApp() {
   
         async init() {  
             try {  
-                // 加载数据  
-                const res = await fetch('data.json?t=' + Date.now());  
-                this.allRecords = await res.json();  
+                // 模拟数据加载（实际使用时请取消注释下面的fetch）  
+                // const res = await fetch('data.json?t=' + Date.now());  
+                // this.allRecords = await res.json();  
+                  
+                // 模拟数据 - 用于演示  
+                this.allRecords = this.generateMockData();  
                   
                 // 初始化显示  
                 this.resetPagination();  
@@ -197,6 +229,45 @@ function lotteryApp() {
                 color: waves[i] || 'gray',  
                 zodiac: zodiacs[i] || '?'  
             }));  
+        },  
+          
+        // 生成模拟数据用于演示  
+        generateMockData() {  
+            const data = [];  
+            const years = ['2025', '2024', '2023', '2022', '2021', '2020'];  
+            const zodiacs = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];  
+            const colors = ['red', 'blue', 'green'];  
+              
+            for (let year of years) {  
+                for (let i = 1; i <= 50; i++) {  
+                    const date = new Date(`${year}-01-01`);  
+                    date.setDate(date.getDate() + (i * 2));  
+                    const openDate = date.toISOString().split('T')[0];  
+                    const openTime = `${openDate} 21:30`;  
+                      
+                    // 生成7个球的号码  
+                    const balls = [];  
+                    const ballColors = [];  
+                    const ballZodiacs = [];  
+                      
+                    for (let j = 0; j < 7; j++) {  
+                        const num = Math.floor(Math.random() * 49) + 1;  
+                        balls.push(num.toString().padStart(2, '0'));  
+                        ballColors.push(colors[Math.floor(Math.random() * colors.length)]);  
+                        ballZodiacs.push(zodiacs[num % 12]);  
+                    }  
+                      
+                    data.push({  
+                        expect: `${year}${i.toString().padStart(4, '0')}`,  
+                        openTime: openTime,  
+                        openCode: balls.join(','),  
+                        wave: ballColors.join(','),  
+                        zodiac: ballZodiacs.join(',')  
+                    });  
+                }  
+            }  
+              
+            return data;  
         }  
     }  
 }  
