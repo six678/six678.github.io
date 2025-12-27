@@ -1,44 +1,121 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(to right, #6a11cb, #2575fc);
-            color: white;
-            font-family: 'Arial', sans-serif;
-            text-align: center;
-            transition: background 0.5s;
-        }
-        h1 {
-            font-size: 4rem;
-            margin: 0;
-        }
-        p {
-            font-size: 1.5rem;
-            margin-top: 10px;
-        }
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 3rem;
-            }
-            p {
-                font-size: 1.2rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div>
-        <h1>Hello!</h1>
-        <p>Welcome！</p>
-    </div>
-</body>
-</html>
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
+    <title>六合开奖记录</title>  
+    <!-- 引入 Tailwind CSS 用于快速美化 UI -->  
+    <script src="https://cdn.tailwindcss.com"></script>  
+    <!-- 引入 Alpine.js 用于极简逻辑交互 -->  
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>  
+    <style>  
+        [x-cloak] { display: none !important; }  
+        .ball {  
+            width: 36px; height: 36px;  
+            display: flex; align-items: center; justify-content: center;  
+            border-radius: 50%; color: white; font-weight: bold;  
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);  
+        }  
+        .bg-red { background: linear-gradient(135deg, #ff6b6b, #ee5253); }  
+        .bg-blue { background: linear-gradient(135deg, #54a0ff, #2e86de); }  
+        .bg-green { background: linear-gradient(135deg, #1dd1a1, #10ac84); }  
+        .bg-gray-100-soft { background-color: #f8f9fa; }  
+    </style>  
+</head>  
+<body class="bg-gray-50 font-sans antialiased text-gray-900">  
+  
+<div x-data="lotteryApp()" x-init="init()" class="max-w-md mx-auto pb-10">  
+      
+    <!-- 顶部导航 -->  
+    <header class="bg-white border-b sticky top-0 z-50 px-4 py-3 flex justify-between items-center">  
+        <h1 class="text-xl font-bold text-gray-800">开奖历史回顾</h1>  
+        <button @click="init()" class="text-blue-500 text-sm">刷新</button>  
+    </header>  
+  
+    <!-- 最新一期卡片 -->  
+    <template x-if="records.length > 0">  
+        <div class="m-4 p-5 bg-white rounded-2xl shadow-sm border border-gray-100">  
+            <div class="flex justify-between items-center mb-4">  
+                <span class="text-gray-500 text-sm">第 <b class="text-gray-800" x-text="records[0].period"></b> 期</span>  
+                <span class="text-gray-500 text-sm" x-text="records[0].date"></span>  
+            </div>  
+            <div class="flex justify-between items-center">  
+                <template x-for="(num, index) in records[0].numbers" :key="index">  
+                    <div class="flex flex-col items-center">  
+                        <div :class="getBallColor(num)" class="ball text-lg" x-text="num"></div>  
+                    </div>  
+                </template>  
+                <div class="text-gray-400 font-bold">+</div>  
+                <div class="flex flex-col items-center">  
+                    <div :class="getBallColor(records[0].special)" class="ball text-lg" x-text="records[0].special"></div>  
+                </div>  
+            </div>  
+        </div>  
+    </template>  
+  
+    <!-- 历史列表 -->  
+    <div class="px-4 mt-6">  
+        <h2 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">历史往期</h2>  
+        <div class="space-y-3">  
+            <template x-for="(item, index) in records.slice(1)" :key="index">  
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-50 flex flex-col space-y-3">  
+                    <div class="flex justify-between text-xs text-gray-400">  
+                        <span x-text="'第 ' + item.period + ' 期'"></span>  
+                        <span x-text="item.date"></span>  
+                    </div>  
+                    <div class="flex items-center space-x-2">  
+                        <template x-for="num in item.numbers">  
+                            <div :class="getBallColor(num)" class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" x-text="num"></div>  
+                        </template>  
+                        <span class="text-gray-300 text-xs">+</span>  
+                        <div :class="getBallColor(item.special)" class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" x-text="item.special"></div>  
+                    </div>  
+                </div>  
+            </template>  
+        </div>  
+    </div>  
+  
+    <!-- 加载中状态 -->  
+    <div x-show="loading" class="text-center py-20 text-gray-400">加载中...</div>  
+</div>  
+  
+<script>  
+function lotteryApp() {  
+    return {  
+        records: [],  
+        loading: true,  
+        // 波色对照表  
+        colors: {  
+            red: [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],  
+            blue: [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],  
+            green: [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]  
+        },  
+        async init() {  
+            this.loading = true;  
+            try {  
+                // 在实际环境中，这里换成你的 data.json 路径  
+                const response = await fetch('data.json');  
+                this.records = await response.json();  
+            } catch (e) {  
+                console.error("数据加载失败", e);  
+                // 演示用模拟数据  
+                this.records = [  
+                    { period: "2023120", date: "2023-10-24", numbers: ["01", "15", "23", "44", "32", "08"], special: "49" },  
+                    { period: "2023119", date: "2023-10-22", numbers: ["02", "11", "24", "31", "42", "10"], special: "05" },  
+                    { period: "2023118", date: "2023-10-20", numbers: ["05", "19", "21", "36", "48", "22"], special: "13" }  
+                ];  
+            }  
+            this.loading = false;  
+        },  
+        getBallColor(num) {  
+            const n = parseInt(num);  
+            if (this.colors.red.includes(n)) return 'bg-red';  
+            if (this.colors.blue.includes(n)) return 'bg-blue';  
+            if (this.colors.green.includes(n)) return 'bg-green';  
+            return 'bg-gray-400';  
+        }  
+    }  
+}  
+</script>  
+</body>  
+</html>  
