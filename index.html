@@ -12,7 +12,6 @@
             width: 38px; height: 38px;  
             display: flex; align-items: center; justify-content: center;  
             border-radius: 50%; color: white; font-weight: bold; font-size: 1.1rem;  
-            /* 去除阴影 */  
             border: 2px solid rgba(0,0,0,0.1);  
         }  
         /* 扁平化纯色背景 */  
@@ -32,21 +31,22 @@
             background: #f5f5f5;  
             border-bottom: 1px solid #e0e0e0;  
         }  
-        .flat-button {  
-            background: #3f51b5;  
-            border-radius: 0;  
-            border: none;  
-        }  
-        .flat-select {  
-            background: white;  
-            border: 1px solid #e0e0e0;  
-            border-radius: 0;  
-        }  
         .flat-border {  
             border: 1px solid #e0e0e0;  
         }  
         .flat-divider {  
             border-top: 1px dashed #e0e0e0;  
+        }  
+          
+        /* 历史记录球体样式 - 增大版 */  
+        .history-ball {  
+            width: 42px; height: 42px;  
+            display: flex; align-items: center; justify-content: center;  
+            border-radius: 50%; color: white; font-weight: bold; font-size: 1.15rem;  
+            border: 2px solid rgba(0,0,0,0.1);  
+        }  
+        .history-zodiac {  
+            font-size: 0.8rem; color: #666; margin-top: 4px; font-weight: 600;  
         }  
     </style>  
 </head>  
@@ -106,25 +106,25 @@
   
         <h2 class="text-gray-500 text-[10px] font-bold ml-2 mb-2 uppercase tracking-[0.2em]">历史纪录回顾</h2>  
   
-        <!-- 历史列表 - 扁平化 -->  
+        <!-- 历史列表 - 扁平化且增大显示 -->  
         <div class="space-y-3">  
             <template x-for="(item, index) in displayedRecords" :key="item.expect">  
                 <!-- 列表里跳过当前年份的第一条（因为上面已经大卡片展示了） -->  
-                <div x-show="index !== 0" class="flat-card p-3">  
-                    <div class="flex justify-between items-center mb-2 flat-divider pb-2">  
-                        <span class="text-xs font-bold text-gray-500">第 <span x-text="item.expect"></span> 期</span>  
-                        <span class="text-[10px] text-gray-400" x-text="item.openTime.split(' ')[0]"></span>  
+                <div x-show="index !== 0" class="flat-card p-4">  <!-- 增加内边距 -->  
+                    <div class="flex justify-between items-center mb-3 flat-divider pb-2">  <!-- 增加底部间距 -->  
+                        <span class="text-sm font-bold text-gray-600">第 <span x-text="item.expect"></span> 期</span>  <!-- 增大字体 -->  
+                        <span class="text-xs text-gray-500" x-text="item.openTime.split(' ')[0]"></span>  
                     </div>  
-                    <div class="flex items-center justify-between pt-1">    
+                    <div class="flex items-center justify-between pt-2">  <!-- 增加顶部间距 -->  
                         <template x-for="(ball, bIndex) in formatBalls(item)" :key="bIndex">    
                             <div class="flex items-center">    
                                 <!-- 在第7个球前加个小加号 -->  
                                 <template x-if="bIndex === 6">    
-                                    <span class="text-gray-300 mr-1 text-xs">+</span>  
+                                    <span class="text-gray-300 mr-1 text-sm">+</span>  <!-- 稍微增大 -->  
                                 </template>  
-                                <div class="flex flex-col items-center scale-90">    
-                                    <div :class="'w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold bg-' + ball.color" x-text="ball.num"></div>  
-                                    <span class="text-[10px] text-gray-400 mt-0.5" x-text="ball.zodiac"></span>  
+                                <div class="flex flex-col items-center">  <!-- 移除 scale-90 -->  
+                                    <div :class="'history-ball bg-' + ball.color" x-text="ball.num"></div>  <!-- 使用增大的球体 -->  
+                                    <span class="history-zodiac" x-text="ball.zodiac"></span>  <!-- 使用增大的生肖字体 -->  
                                 </div>  
                             </div>  
                         </template>  
