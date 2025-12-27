@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>澳门六合彩 - 分析工具</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<style>
+    /* 定义与之前版本一致的配色变量 */
+    :root {
+        --red: #e74c3c;
+        --blue: #3498db;
+        --green: #2ecc71;
+        --dark: #2c3e50;
+        --bg: #f4f7f6;
+    }
+
+    [x-cloak] { display: none !important; }
+
+    /* 页面整体背景 */
+    body { background-color: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+    /* 号码球样式更新 */
+    .ball {
+        width: 36px; height: 36px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 15px; color: #fff;
+        box-shadow: 1px 1px 2px rgba(0,0,0,0.15); /* 增加轻微阴影 */
+        transition: opacity 0.2s;
+    }
+
+    /* 使用新配色 */
+    .bg-red { background-color: var(--red); }
+    .bg-blue { background-color: var(--blue); }
+    .bg-green { background-color: var(--green); }
+
+    .special {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 2px #f1c40f, 0 2px 6px rgba(0,0,0,0.2); /* 金色高亮 */
+        position: relative;
+        z-index: 10;
+    }
+
+    .zodiac { font-size: 11px; color: #666; margin-top: 3px; }
+
+    /* 统计卡片样式 */
+    .stat-card {
+        background: #fff; border: 1px solid #eee;
+        border-radius: 8px; padding: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .stat-title {
+        font-size: 12px; color: #7f8c8d;
+        font-weight: 600; margin-bottom: 4px;
+    }
+    .stat-value { font-size: 22px; font-weight: 800; color: var(--dark); }
+</style>
+</head>
+
+<body class="text-slate-800">
+
+<div x-data="lotteryApp()" x-init="init()" class="max-w-md mx-auto min-h-screen bg-[#f4f7f6]">
+
+    <header class="sticky top-0 z-40 bg-[#2c3e50] text-white px-4 py-3 flex justify-between items-center shadow-md">
+        <div>
+            <h1 class="font-bold text-lg tracking-wide">澳门六合彩</h1>
+            <p class="text-[11px] opacity-80">专业数据分析工具</p>
+        </div>
+        <select x-model="selectedYear" @change="resetPagination()"
+            class="bg-white/10 text-xs px-3 py-1.5 rounded border border-white/20 text-white outline-none focus:bg-white/20">
+            <template x-for="y in years">
+                <option :value="y" x-text="y+'年'" class="text-slate-800"></option>
+            </template>
+        </select>
+    </header>
+
+    <div x-show="loading" class="py-32 text-center text-gray-400">
+        <div class="animate-spin w-8 h-8 mx-auto mb-3 border-4 border-[#3498db] border-t-transparent rounded-full"></div>
+        <span class="text-xs">正在加载数据...</span>
+    </div>
+
+    <div x-show="!loading" x-cloak class="p-3 space-y-4">
+
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-4">
+            <div class="stat-title uppercase tracking-wider">筛选条件</div>
+
+            <div class="flex flex-wrap gap-2">
+                <template x-for="z in zodiacs">
+                    <button @click="toggleZodiac(z)"
+                        :class="highlightZodiacs.includes(z)
+                            ? 'bg-[#2c3e50] text-white border-[#2c3e50]'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
+                        class="w-8 h-8 flex items-center justify-center text-xs rounded border transition-colors" 
+                        x-text="z"></button>
+                </template>
+            </div>
+
+            <div class="flex gap-3 pt-2 border-t border-dashed border-gray-100">
+                <button @click="toggleWave('red')"
+                    :class="highlightWaves.includes('red') ? 'bg-[#e74c3c] text-white border-[#e74c3c]' : 'bg-white text-gray-500 border-gray-200'"
+                    class="flex-1 py-1.5 text-xs border rounded transition-colors">红波</button>
+                <button @click="toggleWave('blue')"
+                    :class="highlightWaves.includes('blue') ? 'bg-[#3498db] text-white border-[#3498db]' : 'bg-white text-gray-500 border-gray-200'"
+                    class="flex-1 py-1.5 text-xs border rounded transition-colors">蓝波</button>
+                <button @click="toggleWave('green')"
+                    :class="highlightWaves.includes('green') ? 'bg-[#2ecc71] text-white border-[#2ecc71]' : 'bg-white text-gray-500 border-gray-200'"
+                    class="flex-1 py-1.5 text-xs border rounded transition-colors">绿波</button>
+            </div>
+
+            <div class="flex flex-nowrap justify-between gap-1">
+                <template x-for="i in 7">
+                    <button @click="toggleIndex(i-1)"
+                        :class="highlightIndexes.includes(i-1)
+                            ? 'bg-[#2c3e50] text-white border-[#2c3e50]'
+                            : 'bg-white text-gray-500 border-gray-200'"
+                        class="flex-1 py-1 text-[10px] rounded border transition-colors">
+                        第<span x-text="i"></span>球
+                    </button>
+                </template>
+            </div>
+
+            <div class="text-right">
+                <button @click="clearHighlight()" class="text-xs text-[#3498db] hover:text-[#2980b9] px-2 py-1">
+                    ↺ 重置所有条件
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div class="stat-card">
+                <div class="stat-title">当前条件命中率</div>
+                <div class="flex items-baseline gap-1">
+                    <span class="stat-value" x-text="hitStats().rate"></span>
+                    <span class="text-sm font-bold text-gray-400">%</span>
+                </div>
+                <div class="text-[10px] text-gray-400 mt-1">
+                    近 <span x-text="analysisRange"></span> 期命中 <span x-text="hitStats().hit"></span> 期
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">特码命中次数</div>
+                <div class="stat-value text-[#e74c3c]" x-text="hitStats().specialHit"></div>
+                <div class="text-[10px] text-gray-400 mt-1">在第7位出现</div>
+            </div>
+        </div>
+
+        <div class="space-y-3 pb-8">
+            <template x-for="(item,index) in displayedRecords">
+                <div class="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                    <div class="flex justify-between items-center text-xs text-gray-400 mb-3 pb-2 border-b border-gray-50">
+                        <span class="font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded">第 <span x-text="item.expect"></span> 期</span>
+                        <span x-text="item.openTime.split(' ')[0]"></span>
+                    </div>
+                    <div class="flex justify-between px-1">
+                        <template x-for="(ball,i) in formatBalls(item)">
+                            <div class="flex items-center">
+                                <template x-if="i===6"><span class="mx-1 text-gray-300 font-light">+</span></template>
+                                <div class="flex flex-col items-center gap-1">
+                                    <div
+                                        :class="[
+                                            'ball','bg-'+ball.color,
+                                            i===6?'special':'',
+                                            ballDim(ball,i)?'opacity-10 grayscale':''
+                                        ]"
+                                        x-text="ball.num"></div>
+                                    <span class="zodiac" x-text="ball.zodiac"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <div id="infinite-sentinel" class="py-4 text-center text-xs text-gray-400">
+            <template x-if="hasMore">
+                <div class="flex justify-center items-center gap-2">
+                    <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce"></div>
+                    <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce delay-75"></div>
+                    <div class="w-2 h-2 bg-gray-300 rounded-full animate-bounce delay-150"></div>
+                </div>
+            </template>
+            <template x-if="!hasMore">—— 暂无更多数据 ——</template>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function lotteryApp(){
+    return {
+        loading: true,
+        analysisRange: 30, // 统计范围
+        zodiacs: ['鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬'],
+
+        highlightZodiacs: [],
+        highlightWaves: [],
+        highlightIndexes: [],
+
+        allRecords: [], filteredRecords: [], displayedRecords: [],
+        selectedYear: new Date().getFullYear().toString(),
+        years: ['2025','2024','2023','2022','2021','2020'],
+        page: 1, pageSize: 15, hasMore: true,
+
+        toggleZodiac(z){
+            this.highlightZodiacs.includes(z)
+                ? this.highlightZodiacs = this.highlightZodiacs.filter(x => x !== z)
+                : this.highlightZodiacs.push(z)
+        },
+        toggleWave(w){
+            this.highlightWaves.includes(w)
+                ? this.highlightWaves = this.highlightWaves.filter(x => x !== w)
+                : this.highlightWaves.push(w)
+        },
+        toggleIndex(i){
+            this.highlightIndexes.includes(i)
+                ? this.highlightIndexes = this.highlightIndexes.filter(x => x !== i)
+                : this.highlightIndexes.push(i)
+        },
+        clearHighlight(){
+            this.highlightZodiacs = []
+            this.highlightWaves = []
+            this.highlightIndexes = []
+        },
+
+        // 核心逻辑：判断球是否变暗
+        ballDim(b, i){
+            // 如果没有任何条件，都不变暗
+            if(!this.highlightZodiacs.length && !this.highlightWaves.length && !this.highlightIndexes.length) return false;
+            
+            let matchZodiac = !this.highlightZodiacs.length || this.highlightZodiacs.includes(b.zodiac);
+            let matchWave = !this.highlightWaves.length || this.highlightWaves.includes(b.color);
+            let matchIndex = !this.highlightIndexes.length || this.highlightIndexes.includes(i);
+
+            // 逻辑是：必须同时满足所有激活的类别的条件
+            // 如果选中了“红波”和“鼠”，那么必须既是红波又是鼠才高亮，其他变暗
+            return !(matchZodiac && matchWave && matchIndex);
+        },
+
+        /* ⭐ 统计命中率逻辑 ⭐ */
+        hitStats(){
+            const records = this.filteredRecords.slice(0, this.analysisRange);
+            let hit = 0;
+            let specialHit = 0;
+
+            // 如果没有选任何条件，显示0
+            if(!this.highlightZodiacs.length && !this.highlightWaves.length && !this.highlightIndexes.length) {
+                return { total: records.length, hit: 0, rate: 0, specialHit: 0 };
+            }
+
+            records.forEach(r => {
+                let periodHit = false;
+                this.formatBalls(r).forEach((b, i) => {
+                    const match = 
+                        (!this.highlightZodiacs.length || this.highlightZodiacs.includes(b.zodiac)) &&
+                        (!this.highlightWaves.length || this.highlightWaves.includes(b.color)) &&
+                        (!this.highlightIndexes.length || this.highlightIndexes.includes(i));
+                    
+                    if(match){
+                        periodHit = true;
+                        if(i === 6) specialHit++;
+                    }
+                })
+                if(periodHit) hit++;
+            })
+
+            return {
+                total: records.length,
+                hit,
+                rate: records.length ? ((hit / records.length) * 100).toFixed(1) : 0,
+                specialHit
+            }
+        },
+
+        async init(){
+            try {
+                // 确保 data.json 存在
+                const res = await fetch('data.json?t=' + Date.now());
+                if(!res.ok) throw new Error("Data fetch failed");
+                this.allRecords = await res.json();
+                this.resetPagination();
+                
+                this.$nextTick(() => {
+                    const sentinel = document.getElementById('infinite-sentinel');
+                    if(sentinel){
+                        new IntersectionObserver(e => {
+                            if(e[0].isIntersecting && this.hasMore) this.loadMore();
+                        }, { rootMargin: '200px' }).observe(sentinel);
+                    }
+                });
+            } catch(e) {
+                console.error(e);
+                alert("无法加载数据，请确保目录下有 data.json 文件");
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        resetPagination(){
+            this.filteredRecords = this.allRecords.filter(
+                i => i.openTime.includes(this.selectedYear)
+            );
+            this.page = 1;
+            this.displayedRecords = [];
+            this.hasMore = true;
+            this.loadMore();
+        },
+
+        loadMore(){
+            const s = (this.page - 1) * this.pageSize;
+            const e = this.page * this.pageSize;
+            const newItems = this.filteredRecords.slice(s, e);
+            
+            if(newItems.length > 0) {
+                this.displayedRecords.push(...newItems);
+                this.page++;
+            }
+            
+            this.hasMore = this.displayedRecords.length < this.filteredRecords.length;
+        },
+
+        formatBalls(item){
+            const c = item.openCode.split(',');
+            const w = item.wave.split(',');
+            const z = item.zodiac.split(',');
+            return c.map((n, i) => ({
+                num: n,
+                color: w[i],
+                zodiac: z[i]
+            }));
+        }
+    }
+}
+</script>
+
+</body>
+</html>
