@@ -11,27 +11,25 @@
         .ball {  
             width: 38px; height: 38px;  
             display: flex; align-items: center; justify-content: center;  
-            border-radius: 50%; color: white; font-weight: bold; font-size: 1rem;  
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);  
+            border-radius: 50%; color: white; font-weight: bold; font-size: 1.1rem;  
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);  
         }  
         .bg-red { background: linear-gradient(180deg, #ff5f6d, #ff3131); }  
         .bg-blue { background: linear-gradient(180deg, #2193b0, #6dd5ed); }  
         .bg-green { background: linear-gradient(180deg, #11998e, #38ef7d); }  
-        .zodiac { font-size: 0.7rem; color: #666; margin-top: 2px; font-weight: bold; }  
+        .zodiac { font-size: 0.75rem; color: #555; margin-top: 4px; font-weight: bold; }  
+        .special-plus { font-size: 1.2rem; font-weight: bold; color: #999; margin: 0 4px; }  
     </style>  
 </head>  
 <body class="bg-gray-100 min-h-screen">  
   
-<div x-data="lotteryApp()" x-init="init()" class="max-w-md mx-auto shadow-xl min-h-screen bg-gray-50 flex flex-col">  
+<div x-data="lotteryApp()" x-init="init()" class="max-w-md mx-auto min-h-screen bg-gray-50 flex flex-col">  
       
     <!-- 顶部导航 -->  
     <header class="bg-indigo-700 text-white px-4 py-3 sticky top-0 z-50 shadow-md flex justify-between items-center">  
-        <div>  
-            <h1 class="text-lg font-black tracking-tighter">MACAU JC</h1>  
-        </div>  
-        <!-- 年份选择 -->  
+        <h1 class="text-lg font-black tracking-tighter">MACAU JC</h1>  
         <div class="flex items-center bg-indigo-800 rounded-lg px-2">  
-            <select x-model="selectedYear" @change="resetPagination()" class="bg-transparent text-sm py-1 outline-none border-none">  
+            <select x-model="selectedYear" @change="resetPagination()" class="bg-transparent text-sm py-1 outline-none border-none text-white">  
                 <template x-for="y in years" :key="y">  
                     <option :value="y" x-text="y + '年'" class="text-black"></option>  
                 </template>  
@@ -39,46 +37,66 @@
         </div>  
     </header>  
   
+    <!-- 加载状态 -->  
     <div x-show="loading" class="text-center py-20 text-gray-500">  
         <div class="animate-spin inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-2"></div>  
-        <p>数据加载中...</p>  
+        <p>正在获取开奖数据...</p>  
     </div>  
   
     <!-- 主体内容 -->  
     <div x-show="!loading" x-cloak class="p-3 flex-1">  
           
-        <!-- 最新一期卡片 (仅在第一页且未筛选年份或筛选今年时显示) -->  
-        <template x-if="page === 1 && allRecords.length > 0">  
-            <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-5 border border-indigo-100">  
+        <!-- 【修复点】最新一期卡片：显示当前筛选年份的第一条记录 -->  
+        <template x-if="filteredRecords.length > 0">  
+            <div class="bg-white rounded-2xl shadow-md overflow-hidden mb-5 border-2 border-indigo-100">  
                 <div class="bg-indigo-50 px-4 py-2 flex justify-between items-center">  
-                    <span class="text-indigo-800 font-bold text-sm">最新第 <span x-text="allRecords[0].expect"></span> 期</span>  
-                    <span class="text-[10px] text-gray-400" x-text="allRecords[0].openTime"></span>  
+                    <div>  
+                        <span class="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full mr-1">最新</span>  
+                        <span class="text-indigo-800 font-bold">第 <span x-text="filteredRecords[0].expect"></span> 期</span>  
+                    </div>  
+                    <span class="text-[11px] text-gray-400" x-text="filteredRecords[0].openTime"></span>  
                 </div>  
                 <div class="p-4 flex justify-between items-center">  
-                    <template x-for="ball in formatBalls(allRecords[0])">  
+                    <!-- 显示前6个球 -->  
+                    <template x-for="(ball, index) in formatBalls(filteredRecords[0]).slice(0,6)" :key="index">  
                         <div class="flex flex-col items-center">  
                             <div :class="'ball bg-' + ball.color" x-text="ball.num"></div>  
                             <span class="zodiac" x-text="ball.zodiac"></span>  
                         </div>  
                     </template>  
+                    <!-- 特码分隔符 -->  
+                    <div class="special-plus">+</div>  
+                    <!-- 显示特码 -->  
+                    <div class="flex flex-col items-center">  
+                        <div :class="'ball bg-' + formatBalls(filteredRecords[0])[6].color" x-text="formatBalls(filteredRecords[0])[6].num"></div>  
+                        <span class="zodiac" x-text="formatBalls(filteredRecords[0])[6].zodiac"></span>  
+                    </div>  
                 </div>  
             </div>  
         </template>  
   
+        <h2 class="text-gray-500 text-[10px] font-bold ml-2 mb-2 uppercase tracking-[0.2em]">历史纪录回顾</h2>  
+  
         <!-- 历史列表 -->  
         <div class="space-y-3">  
             <template x-for="(item, index) in displayedRecords" :key="item.expect">  
-                <!-- 过滤掉最新一期防止重复 -->  
-                <div x-show="item.expect !== allRecords[0].expect" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">  
+                <!-- 列表里跳过当前年份的第一条（因为上面已经大卡片展示了） -->  
+                <div x-show="index !== 0" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">  
                     <div class="flex justify-between items-center mb-2">  
-                        <span class="text-xs font-bold text-gray-500">第 <span x-text="item.expect"></span> 期</span>  
+                        <span class="text-xs font-bold text-gray-400">第 <span x-text="item.expect"></span> 期</span>  
                         <span class="text-[10px] text-gray-300" x-text="item.openTime.split(' ')[0]"></span>  
                     </div>  
-                    <div class="flex items-center space-x-2">  
-                        <template x-for="ball in formatBalls(item)">  
-                            <div class="flex flex-col items-center scale-90">  
-                                <div :class="'w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold bg-' + ball.color" x-text="ball.num"></div>  
-                                <span class="text-[10px] text-gray-400 mt-0.5" x-text="ball.zodiac"></span>  
+                    <div class="flex items-center justify-between">  
+                        <template x-for="(ball, bIndex) in formatBalls(item)" :key="bIndex">  
+                            <div class="flex items-center">  
+                                <!-- 在第7个球前加个小加号 -->  
+                                <template x-if="bIndex === 6">  
+                                    <span class="text-gray-200 mr-1 text-xs">+</span>  
+                                </template>  
+                                <div class="flex flex-col items-center scale-90">  
+                                    <div :class="'w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold bg-' + ball.color" x-text="ball.num"></div>  
+                                    <span class="text-[10px] text-gray-400 mt-0.5" x-text="ball.zodiac"></span>  
+                                </div>  
                             </div>  
                         </template>  
                     </div>  
@@ -86,10 +104,17 @@
             </template>  
         </div>  
   
-        <!-- 滚动监听锚点 -->  
-        <div id="infinite-sentinel" class="h-10 flex items-center justify-center text-gray-400 text-xs mt-4">  
-            <span x-show="hasMore">正在加载更多...</span>  
-            <span x-show="!hasMore && displayedRecords.length > 0">已加载全部记录</span>  
+        <!-- 滚动加载监听 -->  
+        <div id="infinite-sentinel" class="h-20 flex items-center justify-center text-gray-400 text-xs">  
+            <template x-if="hasMore">  
+                <div class="flex items-center">  
+                    <div class="animate-spin mr-2 h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full"></div>  
+                    正在加载更多...  
+                </div>  
+            </template>  
+            <template x-if="!hasMore && filteredRecords.length > 0">  
+                <span>— 已显示该年度全部记录 —</span>  
+            </template>  
         </div>  
     </div>  
 </div>  
@@ -98,9 +123,9 @@
 function lotteryApp() {  
     return {  
         loading: true,  
-        allRecords: [],        // 全量 JSON 数据  
-        filteredRecords: [],   // 经过年份筛选的数据  
-        displayedRecords: [],  // 当前页面展示的数据  
+        allRecords: [],  
+        filteredRecords: [],  
+        displayedRecords: [],  
         selectedYear: new Date().getFullYear().toString(),  
         years: ['2025', '2024', '2023', '2022', '2021', '2020'],  
         page: 1,  
@@ -109,37 +134,47 @@ function lotteryApp() {
   
         async init() {  
             try {  
+                // 加载数据  
                 const res = await fetch('data.json?t=' + Date.now());  
                 this.allRecords = await res.json();  
+                  
+                // 初始化显示  
                 this.resetPagination();  
                   
-                // 初始化滚动监听 (Intersection Observer)  
-                const observer = new IntersectionObserver((entries) => {  
-                    if (entries[0].isIntersecting && !this.loading && this.hasMore) {  
-                        this.loadMore();  
-                    }  
-                }, { threshold: 0.1 });  
-                  
-                observer.observe(document.getElementById('infinite-sentinel'));  
+                // 延迟初始化监听器，确保 DOM 已渲染  
+                this.$nextTick(() => {  
+                    const observer = new IntersectionObserver((entries) => {  
+                        if (entries[0].isIntersecting && !this.loading && this.hasMore) {  
+                            this.loadMore();  
+                        }  
+                    }, { rootMargin: '100px' });  
+                    observer.observe(document.getElementById('infinite-sentinel'));  
+                });  
             } catch (e) {  
-                console.error("加载失败");  
+                console.error("加载失败", e);  
+            } finally {  
+                this.loading = false;  
             }  
-            this.loading = false;  
         },  
   
-        // 当切换年份时重置  
         resetPagination() {  
-            this.page = 1;  
-            // 根据年份过滤  
+            // 1. 过滤对应年份数据  
             this.filteredRecords = this.allRecords.filter(item =>   
-                item.openTime.startsWith(this.selectedYear)  
+                item.openTime && item.openTime.includes(this.selectedYear)  
             );  
+              
+            // 2. 重置分页参数  
+            this.page = 1;  
             this.displayedRecords = [];  
-            this.hasMore = true;  
+            this.hasMore = this.filteredRecords.length > 0;  
+              
+            // 3. 执行第一次加载  
             this.loadMore();  
         },  
   
         loadMore() {  
+            if (!this.hasMore) return;  
+  
             const start = (this.page - 1) * this.pageSize;  
             const end = this.page * this.pageSize;  
             const nextBatch = this.filteredRecords.slice(start, end);  
@@ -153,14 +188,14 @@ function lotteryApp() {
         },  
   
         formatBalls(item) {  
-            if (!item || !item.openCode) return [];  
+            if (!item || !item.openCode) return Array(7).fill({num: '?', color: 'gray', zodiac: '?'});  
             const codes = item.openCode.split(',');  
             const waves = item.wave.split(',');  
             const zodiacs = item.zodiac.split(',');  
             return codes.map((code, i) => ({  
                 num: code,  
-                color: waves[i],  
-                zodiac: zodiacs[i]  
+                color: waves[i] || 'gray',  
+                zodiac: zodiacs[i] || '?'  
             }));  
         }  
     }  
