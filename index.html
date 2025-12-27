@@ -24,22 +24,23 @@
   
 <div x-data="lotteryApp()" x-init="init()" class="max-w-md mx-auto">  
       
-    <header class="bg-indigo-700 text-white px-4 py-4 sticky top-0 z-50 shadow-lg">  
-        <h1 class="text-xl font-black italic tracking-wider text-center">MACAU LOTTERY</h1>  
+    <header class="bg-indigo-700 text-white px-4 py-4 sticky top-0 z-50 shadow-lg flex justify-between items-center">  
+        <h1 class="text-xl font-black italic tracking-wider">MACAU LOTTERY</h1>  
+        <span class="text-xs opacity-70" x-text="'共' + allRecords.length + '期'"></span>  
     </header>  
   
     <div x-show="loading" class="text-center py-10 text-gray-500">数据加载中...</div>  
   
     <div x-show="!loading" x-cloak class="p-3">  
-        <!-- 最新一期 -->  
-        <template x-if="records.length > 0">  
+        <!-- 1. 最新一期卡片（始终显示第一条数据） -->  
+        <template x-if="allRecords.length > 0">  
             <div class="bg-white rounded-2xl shadow-md overflow-hidden mb-4 border-2 border-indigo-100">  
                 <div class="bg-indigo-50 px-4 py-2 border-b border-indigo-100 flex justify-between items-center">  
-                    <span class="text-indigo-800 font-bold">最新第 <span x-text="records[0].expect"></span> 期</span>  
-                    <span class="text-xs text-gray-400" x-text="records[0].openTime"></span>  
+                    <span class="text-indigo-800 font-bold">最新第 <span x-text="allRecords[0].expect"></span> 期</span>  
+                    <span class="text-xs text-gray-400" x-text="allRecords[0].openTime"></span>  
                 </div>  
                 <div class="p-4 flex justify-between items-center">  
-                    <template x-for="ball in formatBalls(records[0])" :key="ball.num">  
+                    <template x-for="ball in formatBalls(allRecords[0])" :key="ball.num">  
                         <div class="flex flex-col items-center">  
                             <div :class="'ball bg-' + ball.color" x-text="ball.num"></div>  
                             <span class="zodiac" x-text="ball.zodiac"></span>  
@@ -49,13 +50,16 @@
             </div>  
         </template>  
   
-        <!-- 历史纪录 -->  
+        <h2 class="text-gray-500 text-xs font-bold ml-2 mb-2 uppercase tracking-widest">历史往期回顾</h2>  
+  
+        <!-- 2. 分页显示的历史列表 -->  
         <div class="space-y-3">  
-            <template x-for="(item, index) in records.slice(1)" :key="index">  
-                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">  
+            <!-- 注意：这里从 displayedRecords 的第2条开始循环，因为第1条已经在上面作为“最新一期”显示了 -->  
+            <template x-for="(item, index) in displayedRecords" :key="item.expect">  
+                <div x-show="item.expect !== allRecords[0].expect" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">  
                     <div class="flex justify-between items-center mb-2">  
                         <span class="text-sm font-bold text-gray-700">第 <span x-text="item.expect"></span> 期</span>  
-                        <span class="text-xs text-gray-400" x-text="item.openTime"></span>  
+                        <span class="text-xs text-gray-400" x-text="item.openTime.split(' ')[0]"></span>  
                     </div>  
                     <div class="flex items-center space-x-2">  
                         <template x-for="ball in formatBalls(item)">  
@@ -68,6 +72,20 @@
                 </div>  
             </template>  
         </div>  
+  
+        <!-- 3. 加载更多按钮 -->  
+        <div class="mt-6 mb-10 px-2">  
+            <button   
+                x-show="hasMore"   
+                @click="loadMore()"   
+                class="w-full py-3 bg-white text-indigo-600 font-bold rounded-xl shadow-sm border border-indigo-100 hover:bg-indigo-50 transition-colors"  
+            >  
+                加载更多记录 (<span x-text="displayedRecords.length"></span> / <span x-text="allRecords.length"></span>)  
+            </button>  
+            <div x-show="!hasMore" class="text-center text-gray-400 text-sm py-4">  
+                — 已加载全部记录 —  
+            </div>  
+        </div>  
     </div>  
 </div>  
   
@@ -75,18 +93,40 @@
 function lotteryApp() {  
     return {  
         loading: true,  
-        records: [],  
+        allRecords: [],      // 存储从 json 读取的所有数据  
+        displayedRecords: [], // 存储当前页面展示的数据  
+        pageSize: 30,         // 每页加载数量  
+        hasMore: false,  
+  
         async init() {  
             try {  
-                // 直接请求本地 GitHub 仓库里的 data.json  
                 const res = await fetch('data.json?t=' + Date.now());  
-                this.records = await res.json();  
+                this.allRecords = await res.json();  
+                  
+                // 初始加载第一页  
+                this.loadMore();  
             } catch (e) {  
-                console.error("加载数据失败");  
+                console.error("数据加载失败");  
             }  
             this.loading = false;  
         },  
+  
+        loadMore() {  
+            const start = this.displayedRecords.length;  
+            const end = start + this.pageSize;  
+              
+            // 从全量数据中切出下一块  
+            const nextBatch = this.allRecords.slice(start, end);  
+              
+            // 合并到展示数组  
+            this.displayedRecords = [...this.displayedRecords, ...nextBatch];  
+              
+            // 判断是否还有更多  
+            this.hasMore = this.displayedRecords.length < this.allRecords.length;  
+        },  
+  
         formatBalls(item) {  
+            if (!item || !item.openCode) return [];  
             const codes = item.openCode.split(',');  
             const waves = item.wave.split(',');  
             const zodiacs = item.zodiac.split(',');  
