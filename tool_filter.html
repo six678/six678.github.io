@@ -18,11 +18,10 @@
             color: #333; 
             margin: 0; 
             padding: 10px; 
-            /* 防止双击缩放 */
             touch-action: manipulation; 
         }
         
-        /* === 顶部导航栏 (Tab) === */
+        /* === 顶部导航栏 === */
         .nav-tabs {
             display: flex;
             background: white;
@@ -50,16 +49,14 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* 内容区域控制 */
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 通用卡片样式 */
         .section { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
         /* === 统计页面样式 === */
-        textarea { 
+        textarea.data-input { 
             width: 100%; height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; 
             box-sizing: border-box; font-family: monospace; font-size: 16px; -webkit-appearance: none; resize: none;
         }
@@ -67,7 +64,7 @@
         .action-bar { display: grid; grid-template-columns: 1fr 1fr 0.6fr; gap: 8px; margin-top: 10px; }
         .btn-stat { height: 44px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; color: white; cursor: pointer; }
         .btn-run { background: var(--green); }
-        .btn-copy { background: var(--accent); display: none; } /* 初始隐藏 */
+        .btn-copy { background: var(--accent); display: none; }
         .btn-clear { background: #95a5a6; color: white; }
 
         .stats-container { margin-top: 15px; background: #fafafa; border-radius: 8px; padding: 10px; border: 1px solid #eee; display: none; }
@@ -78,11 +75,49 @@
         .stat-nums { font-family: monospace; font-size: 17px; color: #333; line-height: 1.4; word-break: break-all; }
         .hot-num { color: var(--red); font-weight: bold; }
 
-        /* === 过滤页面样式 === */
+        /* === 选号工具页面样式 === */
         .settings-bar { 
             display: flex; align-items: center; justify-content: space-between;
             background: #fff3cd; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px;
         }
+
+        /* 结果展示区域 */
+        .result-area { 
+            margin-bottom: 20px; 
+            padding-bottom: 20px; 
+            border-bottom: 2px dashed #eee; 
+        }
+        .result-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+        }
+        .result-title {
+            font-size: 1.1rem; color: var(--primary); font-weight: bold; margin: 0;
+        }
+        .btn-copy-sm {
+            background: var(--accent); color: white; border: none; padding: 6px 12px; 
+            border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .ball-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; justify-items: center; }
+        .ball {
+            display: flex; justify-content: center; align-items: center;
+            width: 38px; height: 38px; border-radius: 50%;
+            font-weight: bold; color: white; font-size: 15px;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.2); transition: all 0.3s;
+        }
+        .ball.red { background-color: var(--red); }
+        .ball.blue { background-color: var(--accent); }
+        .ball.green { background-color: var(--green); }
+        
+        .ball.disabled { 
+            opacity: 0.15; 
+            filter: grayscale(100%); 
+            transform: scale(0.7); 
+            background-color: #ccc !important;
+            box-shadow: none;
+        }
+
+        /* 过滤条件组 */
         .filter-group { margin-bottom: 15px; }
         .filter-label { display: block; font-weight: bold; margin-bottom: 8px; color: #555; font-size: 14px; }
         
@@ -92,41 +127,43 @@
             font-size: 14px; color: #444; transition: all 0.2s;
         }
         .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
-        
-        .reset-btn { width: 100%; padding: 12px; background: var(--red); color: white; border: none; border-radius: 8px; font-size: 15px; margin-top: 10px; }
 
-        /* 结果球 */
-        .result-area { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
-        .ball-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; justify-items: center; }
-        .ball {
-            display: flex; justify-content: center; align-items: center;
-            width: 38px; height: 38px; border-radius: 50%;
-            font-weight: bold; color: white; font-size: 15px;
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.2); transition: opacity 0.2s;
+        /* 自定义多行输入 & 按钮组样式 */
+        .custom-textarea {
+            width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;
+            box-sizing: border-box; font-family: monospace; font-size: 15px; resize: none;
+            background: #fafafa; margin-bottom: 10px;
         }
-        .ball.red { background-color: var(--red); }
-        .ball.blue { background-color: var(--accent); }
-        .ball.green { background-color: var(--green); }
-        .ball.disabled { opacity: 0.1; filter: grayscale(100%); transform: scale(0.8); }
-
-        h2 { font-size: 1.1rem; margin: 0 0 10px 0; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .custom-textarea:focus { border-color: var(--accent); background: white; outline: none; }
+        
+        .custom-action-bar {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+        .btn-apply {
+            background: var(--primary); color: white; border: none; border-radius: 8px;
+            padding: 12px; font-weight: bold; font-size: 15px; cursor: pointer;
+        }
+        .btn-reset {
+            background: var(--red); color: white; border: none; border-radius: 8px;
+            padding: 12px; font-weight: bold; font-size: 15px; cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
     <nav class="nav-tabs">
         <div class="nav-item active" onclick="switchTab('stats')">📊 号码统计</div>
-        <div class="nav-item" onclick="switchTab('filter')">🛡️ 号码过滤</div>
+        <div class="nav-item" onclick="switchTab('filter')">🛡️ 选号工具</div>
     </nav>
 
     <div id="tab-stats" class="tab-content active">
         <div class="section">
-            <h2>历史数据录入</h2>
-            <textarea id="historyInput" placeholder="直接粘贴开奖记录，例如：&#10;001期 01 05 12...&#10;002期 18 20 33..."></textarea>
+            <h2 style="font-size:1.1rem; text-align:center; color:var(--primary); margin-bottom:15px;">历史数据录入</h2>
+            <textarea id="historyInput" class="data-input" placeholder="直接粘贴开奖记录，例如：&#10;001期 01 05 12...&#10;002期 18 20 33..."></textarea>
             
             <div class="action-bar">
-                <button class="btn-stat btn-run" onclick="analyzeHistory()">▶ 统计</button>
-                <button id="btnCopy" class="btn-stat btn-copy" onclick="copyStats()">📋 复制</button>
+                <button class="btn-stat btn-run" onclick="analyzeHistory()">▶ 开始统计</button>
+                <button id="btnCopy" class="btn-stat btn-copy" onclick="copyStats()">📋 复制结果</button>
                 <button class="btn-stat btn-clear" onclick="clearStats()">🗑️ 清空</button>
             </div>
         </div>
@@ -137,15 +174,55 @@
 
     <div id="tab-filter" class="tab-content">
         <div class="section">
-            <div class="filter-group">
-                <h2 style="border:none;">🎯 剩余结果 (<span id="result-count" style="color:var(--accent)">49</span>个)</h2>
+            
+            <div class="settings-bar">
+                <span>⚙️ <strong>今年是</strong> (设定1号生肖)</span>
+                <select id="yearZodiac" onchange="initApp()" style="font-size:16px; padding:4px;">
+                    </select>
+            </div>
+
+            <div class="result-area">
+                <div class="result-header">
+                    <h2 class="result-title">🎯 剩余 (<span id="result-count" style="color:var(--accent)">49</span>个)</h2>
+                    <button class="btn-copy-sm" id="btnCopyResult" onclick="copyFilterResults()">📋 复制号码</button>
+                </div>
                 <div id="numbersGrid" class="ball-grid"></div>
             </div>
 
-            <div class="settings-bar">
-                <span>⚙️ <strong>参数设置</strong> (设定1号生肖)</span>
-                <select id="yearZodiac" onchange="initApp()" style="font-size:16px; padding:4px;">
-                    </select>
+            <div class="filter-group">
+                <span class="filter-label">✍️ 自定义排除 (支持多行/空格):</span>
+                <textarea id="customFilterInput" class="custom-textarea" placeholder="在此粘贴号码或生肖，例如：&#10;01 05 49&#10;鼠 龙 蛇&#10;(点击下方排除按钮生效)"></textarea>
+                <div class="custom-action-bar">
+                    <button class="btn-apply" onclick="applyCustomFilter()">🚫 执行排除</button>
+                    <button class="btn-reset" onclick="resetFilters()">🔄 重置所有条件</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">按头数排除:</span>
+                <div class="btn-grid" style="grid-template-columns: repeat(5, 1fr);">
+                    <button class="filter-btn" onclick="toggleFilter('head', 0, this)">0头</button>
+                    <button class="filter-btn" onclick="toggleFilter('head', 1, this)">1头</button>
+                    <button class="filter-btn" onclick="toggleFilter('head', 2, this)">2头</button>
+                    <button class="filter-btn" onclick="toggleFilter('head', 3, this)">3头</button>
+                    <button class="filter-btn" onclick="toggleFilter('head', 4, this)">4头</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">按尾数排除:</span>
+                <div class="btn-grid" style="grid-template-columns: repeat(5, 1fr);">
+                    <button class="filter-btn" onclick="toggleFilter('tail', 1, this)">1尾</button>
+                    <button class="filter-btn" onclick="toggleFilter('tail', 2, this)">2尾</button>
+                    <button class="filter-btn" onclick="toggleFilter('tail', 3, this)">3尾</button>
+                    <button class="filter-btn" onclick="toggleFilter('tail', 4, this)">4尾</button>
+                    <button class="filter-btn" onclick="toggleFilter('tail', 5, this)">5尾</button>
+                    <button class="filter-btn" onclick="toggleFilter('tail', 6, this)">6尾</button>
+                    <button class="filter-btn" onclick="toggleFilter('tail', 7, this)">7尾</button>
+                    <button class="filter-btn" onclick="toggleFilter('tail', 8, this)">8尾</button>
+                    <button class="filter-btn" onclick="toggleFilter('tail', 9, this)">9尾</button>
+                    <button class="filter-btn" onclick="toggleFilter('tail', 0, this)">0尾</button>
+                </div>
             </div>
 
             <div class="filter-group">
@@ -171,25 +248,7 @@
                 <span class="filter-label">按生肖排除:</span>
                 <div class="btn-grid" id="zodiacFilters" style="grid-template-columns: repeat(6, 1fr);"></div>
             </div>
-
-            <div class="filter-group">
-                <span class="filter-label">按尾数排除:</span>
-                <div class="btn-grid" style="grid-template-columns: repeat(5, 1fr);">
-                    <button class="filter-btn" onclick="toggleFilter('tail', 1, this)">1尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 2, this)">2尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 3, this)">3尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 4, this)">4尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 5, this)">5尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 6, this)">6尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 7, this)">7尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 8, this)">8尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 9, this)">9尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 0, this)">0尾</button>
-                </div>
-            </div>
-
-            <button class="reset-btn" onclick="resetFilters()">🔄 重置所有过滤条件</button>
-
+            
         </div>
     </div>
 
@@ -203,7 +262,8 @@
         green: [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
     };
 
-    let activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [] };
+    // 新增：head 数组用于存储头数
+    let activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [], head: [], customNums: [] };
     let currentZodiacIndex = 5; // 默认蛇
     let statsTextForCopy = "";
 
@@ -211,26 +271,19 @@
     window.onload = function() {
         initYearSelect();
         initApp();
-        // 自动聚焦第一个输入框
-        // document.getElementById('historyInput').focus(); 
     };
 
-    // --- 3. Tab 切换逻辑 ---
+    // --- 3. Tab 切换 ---
     window.switchTab = function(tabName) {
-        // 隐藏所有Tab内容
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        // 取消所有Nav激活状态
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        
-        // 激活当前选中
         document.getElementById('tab-' + tabName).classList.add('active');
-        // 找到点击的按钮并激活 (这里简单处理，假设顺序固定，或者通过event)
         const tabs = document.querySelectorAll('.nav-item');
         if(tabName === 'stats') tabs[0].classList.add('active');
         else tabs[1].classList.add('active');
     }
 
-    // --- 4. 统计功能逻辑 ---
+    // --- 4. 统计逻辑 ---
     window.analyzeHistory = function() {
         const input = document.getElementById('historyInput');
         const output = document.getElementById('statsOutput');
@@ -249,14 +302,12 @@
             return;
         }
 
-        // 计算频率
         const counts = {};
         matches.forEach(m => {
             const num = parseInt(m, 10);
             if (num >= 1 && num <= 49) counts[num] = (counts[num] || 0) + 1;
         });
 
-        // 按频率分组
         const groups = {};
         Object.keys(counts).forEach(numKey => {
             const num = parseInt(numKey);
@@ -265,13 +316,11 @@
             groups[count].push(num);
         });
 
-        // 补全0次
         const appeared = Object.keys(counts).map(Number);
         const missing = [];
         for(let i=1; i<=49; i++) if(!appeared.includes(i)) missing.push(i);
         if (missing.length > 0) groups[0] = missing;
 
-        // 排序并渲染
         const sortedCounts = Object.keys(groups).map(Number).sort((a, b) => b - a);
         let html = '';
         let plainText = '【六合彩统计结果】\n';
@@ -295,10 +344,9 @@
 
         output.innerHTML = html;
         statsTextForCopy = plainText;
-        btnCopy.style.display = 'block'; // 显示复制按钮
+        btnCopy.style.display = 'block';
     }
 
-    // 清空功能
     window.clearStats = function() {
         if(confirm('确定要清空输入和统计结果吗？')) {
             document.getElementById('historyInput').value = '';
@@ -309,37 +357,78 @@
         }
     }
 
-    window.copyStats = function() {
-        if (!statsTextForCopy) return;
-        const btn = document.getElementById('btnCopy');
+    window.copyStats = function() { copyTextToClipboard(statsTextForCopy, 'btnCopy'); }
+
+    // --- 5. 过滤功能逻辑 ---
+
+    window.copyFilterResults = function() {
+        const balls = document.querySelectorAll('#numbersGrid .ball:not(.disabled)');
+        if(balls.length === 0) { alert("没有剩余号码可复制"); return; }
+
+        let nums = [];
+        balls.forEach(b => nums.push(b.innerText));
+        const text = `【推荐号码】共${nums.length}个:\n${nums.join(', ')}`;
         
-        // 兼容性复制函数
-        const doCopy = (text) => {
+        copyTextToClipboard(text, 'btnCopyResult');
+    }
+
+    function copyTextToClipboard(text, btnId) {
+        if (!text) return;
+        const btn = document.getElementById(btnId);
+        
+        const doCopy = (txt) => {
             const textArea = document.createElement("textarea");
-            textArea.value = text;
+            textArea.value = txt;
             textArea.style.position = "fixed"; textArea.style.left = "-9999px";
             document.body.appendChild(textArea);
             textArea.focus(); textArea.select();
-            try { document.execCommand('copy'); showSuccess(); } 
-            catch (err) { alert("复制失败"); }
+            try { document.execCommand('copy'); showSuccess(btn); } 
+            catch (err) { alert("复制失败，请手动截图"); }
             document.body.removeChild(textArea);
         };
         
-        const showSuccess = () => {
-            const original = btn.innerHTML;
-            btn.innerHTML = '✅ 已复制';
-            btn.style.background = '#27ae60';
-            setTimeout(() => { btn.innerHTML = original; btn.style.background = ''; }, 2000);
-        };
-
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(statsTextForCopy).then(showSuccess).catch(() => doCopy(statsTextForCopy));
+            navigator.clipboard.writeText(text).then(() => showSuccess(btn)).catch(() => doCopy(text));
         } else {
-            doCopy(statsTextForCopy);
+            doCopy(text);
         }
     }
 
-    // --- 5. 过滤功能逻辑 ---
+    function showSuccess(btn) {
+        const original = btn.innerHTML;
+        btn.innerHTML = '✅ 已复制';
+        btn.style.background = '#27ae60';
+        setTimeout(() => { btn.innerHTML = original; btn.style.background = ''; }, 2000);
+    }
+
+    window.applyCustomFilter = function() {
+        const inputVal = document.getElementById('customFilterInput').value;
+        if (!inputVal.trim()) return;
+
+        const numMatches = inputVal.match(/\b(0?[1-9]|[1-4][0-9])\b/g);
+        if (numMatches) {
+            numMatches.forEach(n => {
+                const num = parseInt(n, 10);
+                if (!activeFilters.customNums.includes(num)) {
+                    activeFilters.customNums.push(num);
+                }
+            });
+        }
+
+        zodiacs.forEach(z => {
+            if (inputVal.includes(z)) {
+                if (!activeFilters.zodiac.includes(z)) {
+                    activeFilters.zodiac.push(z);
+                    const btns = document.querySelectorAll('#zodiacFilters .filter-btn');
+                    btns.forEach(btn => {
+                        if (btn.innerText.includes(z)) btn.classList.add('active');
+                    });
+                }
+            }
+        });
+        renderGrid();
+    }
+
     function initYearSelect() {
         const select = document.getElementById('yearZodiac');
         zodiacs.forEach((z, index) => {
@@ -384,7 +473,7 @@
     }
 
     function getNumInfo(num) {
-        let color = 'gray'; // default
+        let color = 'gray'; 
         if (waves.red.includes(num)) color = 'red';
         else if (waves.blue.includes(num)) color = 'blue';
         else if (waves.green.includes(num)) color = 'green';
@@ -402,6 +491,10 @@
         if (activeFilters.size.includes('big') && num >= 25) return true;
         if (activeFilters.zodiac.includes(info.zodiac)) return true;
         if (activeFilters.tail.includes(num % 10)) return true;
+        // 新增：头数过滤
+        if (activeFilters.head.includes(Math.floor(num / 10))) return true;
+        
+        if (activeFilters.customNums.includes(num)) return true;
         return false;
     }
 
@@ -418,8 +511,10 @@
     }
 
     window.resetFilters = function() {
-        activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [] };
+        // 重置时增加 head 字段
+        activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [], head: [], customNums: [] };
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('customFilterInput').value = '';
         renderGrid();
     }
 </script>

@@ -9,7 +9,7 @@
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 <style>
-    /* 定义与之前版本一致的配色变量 */
+    /* 定义配色变量 */
     :root {
         --red: #e74c3c;
         --blue: #3498db;
@@ -20,33 +20,30 @@
 
     [x-cloak] { display: none !important; }
 
-    /* 页面整体背景 */
     body { background-color: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-    /* 号码球样式更新 */
+    /* 号码球样式 */
     .ball {
         width: 36px; height: 36px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         font-weight: 700; font-size: 15px; color: #fff;
-        box-shadow: 1px 1px 2px rgba(0,0,0,0.15); /* 增加轻微阴影 */
+        box-shadow: 1px 1px 2px rgba(0,0,0,0.15);
         transition: opacity 0.2s;
     }
 
-    /* 使用新配色 */
     .bg-red { background-color: var(--red); }
     .bg-blue { background-color: var(--blue); }
     .bg-green { background-color: var(--green); }
 
     .special {
         transform: scale(1.1);
-        box-shadow: 0 0 0 2px #f1c40f, 0 2px 6px rgba(0,0,0,0.2); /* 金色高亮 */
+        box-shadow: 0 0 0 2px #f1c40f, 0 2px 6px rgba(0,0,0,0.2);
         position: relative;
         z-index: 10;
     }
 
     .zodiac { font-size: 11px; color: #666; margin-top: 3px; }
 
-    /* 统计卡片样式 */
     .stat-card {
         background: #fff; border: 1px solid #eee;
         border-radius: 8px; padding: 12px;
@@ -85,7 +82,12 @@
     <div x-show="!loading" x-cloak class="p-3 space-y-4">
 
         <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-4">
-            <div class="stat-title uppercase tracking-wider">筛选条件</div>
+            <div class="flex justify-between items-center">
+                <div class="stat-title uppercase tracking-wider">筛选条件</div>
+                <button @click="clearHighlight()" class="text-xs text-[#3498db] hover:text-[#2980b9]">
+                    ↺ 重置条件
+                </button>
+            </div>
 
             <div class="flex flex-wrap gap-2">
                 <template x-for="z in zodiacs">
@@ -96,6 +98,20 @@
                         class="w-8 h-8 flex items-center justify-center text-xs rounded border transition-colors" 
                         x-text="z"></button>
                 </template>
+            </div>
+
+            <div class="border-t border-dashed border-gray-100 pt-3">
+                <div class="grid grid-cols-7 gap-1.5">
+                    <template x-for="n in 49">
+                        <button @click="toggleNumber(n)"
+                            :class="highlightNumbers.includes(n) 
+                                ? 'bg-[#2c3e50] text-white border-[#2c3e50] font-bold' 
+                                : 'bg-white text-gray-500 border-gray-200'"
+                            class="py-1 text-[11px] rounded border transition-colors"
+                            x-text="n < 10 ? '0'+n : n">
+                        </button>
+                    </template>
+                </div>
             </div>
 
             <div class="flex gap-3 pt-2 border-t border-dashed border-gray-100">
@@ -120,12 +136,6 @@
                         第<span x-text="i"></span>球
                     </button>
                 </template>
-            </div>
-
-            <div class="text-right">
-                <button @click="clearHighlight()" class="text-xs text-[#3498db] hover:text-[#2980b9] px-2 py-1">
-                    ↺ 重置所有条件
-                </button>
             </div>
         </div>
 
@@ -193,18 +203,26 @@
 function lotteryApp(){
     return {
         loading: true,
-        analysisRange: 30, // 统计范围
+        analysisRange: 30, 
         zodiacs: ['鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬'],
 
+        // 筛选状态
         highlightZodiacs: [],
         highlightWaves: [],
         highlightIndexes: [],
+        highlightNumbers: [], // 新增：号码数组
 
         allRecords: [], filteredRecords: [], displayedRecords: [],
         selectedYear: new Date().getFullYear().toString(),
         years: ['2025','2024','2023','2022','2021','2020'],
         page: 1, pageSize: 15, hasMore: true,
 
+        // 切换号码选择
+        toggleNumber(n){
+            this.highlightNumbers.includes(n)
+                ? this.highlightNumbers = this.highlightNumbers.filter(x => x !== n)
+                : this.highlightNumbers.push(n)
+        },
         toggleZodiac(z){
             this.highlightZodiacs.includes(z)
                 ? this.highlightZodiacs = this.highlightZodiacs.filter(x => x !== z)
@@ -220,34 +238,45 @@ function lotteryApp(){
                 ? this.highlightIndexes = this.highlightIndexes.filter(x => x !== i)
                 : this.highlightIndexes.push(i)
         },
+        
         clearHighlight(){
             this.highlightZodiacs = []
             this.highlightWaves = []
             this.highlightIndexes = []
+            this.highlightNumbers = [] // 清空号码
         },
 
         // 核心逻辑：判断球是否变暗
         ballDim(b, i){
-            // 如果没有任何条件，都不变暗
-            if(!this.highlightZodiacs.length && !this.highlightWaves.length && !this.highlightIndexes.length) return false;
+            // 没有任何条件时，不高亮（也不变暗，即全亮）
+            if(!this.highlightZodiacs.length && 
+               !this.highlightWaves.length && 
+               !this.highlightIndexes.length && 
+               !this.highlightNumbers.length) return false;
             
+            // 逻辑：所有已激活的分类条件取"交集" (AND)
             let matchZodiac = !this.highlightZodiacs.length || this.highlightZodiacs.includes(b.zodiac);
             let matchWave = !this.highlightWaves.length || this.highlightWaves.includes(b.color);
             let matchIndex = !this.highlightIndexes.length || this.highlightIndexes.includes(i);
+            
+            // 增加号码匹配 (注意：b.num是字符串"01"，n是数字1，需转类型)
+            let matchNumber = !this.highlightNumbers.length || this.highlightNumbers.includes(parseInt(b.num, 10));
 
-            // 逻辑是：必须同时满足所有激活的类别的条件
-            // 如果选中了“红波”和“鼠”，那么必须既是红波又是鼠才高亮，其他变暗
-            return !(matchZodiac && matchWave && matchIndex);
+            // 只要有一个分类不满足，就变暗
+            return !(matchZodiac && matchWave && matchIndex && matchNumber);
         },
 
-        /* ⭐ 统计命中率逻辑 ⭐ */
+        /* 统计命中率逻辑 */
         hitStats(){
             const records = this.filteredRecords.slice(0, this.analysisRange);
             let hit = 0;
             let specialHit = 0;
 
-            // 如果没有选任何条件，显示0
-            if(!this.highlightZodiacs.length && !this.highlightWaves.length && !this.highlightIndexes.length) {
+            // 全空则返回0
+            if(!this.highlightZodiacs.length && 
+               !this.highlightWaves.length && 
+               !this.highlightIndexes.length && 
+               !this.highlightNumbers.length) {
                 return { total: records.length, hit: 0, rate: 0, specialHit: 0 };
             }
 
@@ -257,7 +286,8 @@ function lotteryApp(){
                     const match = 
                         (!this.highlightZodiacs.length || this.highlightZodiacs.includes(b.zodiac)) &&
                         (!this.highlightWaves.length || this.highlightWaves.includes(b.color)) &&
-                        (!this.highlightIndexes.length || this.highlightIndexes.includes(i));
+                        (!this.highlightIndexes.length || this.highlightIndexes.includes(i)) &&
+                        (!this.highlightNumbers.length || this.highlightNumbers.includes(parseInt(b.num, 10)));
                     
                     if(match){
                         periodHit = true;
@@ -277,7 +307,6 @@ function lotteryApp(){
 
         async init(){
             try {
-                // 确保 data.json 存在
                 const res = await fetch('data.json?t=' + Date.now());
                 if(!res.ok) throw new Error("Data fetch failed");
                 this.allRecords = await res.json();
