@@ -6,222 +6,206 @@
     <title>158930.COM - 六合彩专业数据门户</title>
     <style>
         :root {
-            --primary: #2c3e50;     /* 深青灰 */
-            --accent: #3498db;      /* 亮蓝 */
-            --bg: #f4f7f6;          /* 淡灰背景 */
+            --primary-gradient: linear-gradient(135deg, #29323c 0%, #485563 100%);
+            --accent-color: #3498db;
+            --bg-color: #f0f2f5;
             --card-bg: #ffffff;
-            --text-main: #333333;
-            --text-sub: #7f8c8d;
-            --shadow: 0 8px 20px rgba(0,0,0,0.06);
+            --text-main: #2c3e50;
+            --text-sub: #95a5a6;
+            --shadow-soft: 0 10px 25px rgba(0,0,0,0.05);
+            --shadow-hover: 0 15px 35px rgba(0,0,0,0.1);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
             margin: 0;
             padding: 0;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
-            color: var(--text-main);
-            touch-action: manipulation;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* === 顶部品牌区域 === */
+        /* 头部设计 */
         header {
             width: 100%;
-            background: linear-gradient(135deg, var(--primary) 0%, #34495e 100%);
-            padding: 40px 20px 60px 20px; /* 底部留白给卡片上浮 */
-            text-align: center;
+            height: 260px;
+            background: var(--primary-gradient);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             color: white;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
-            margin-bottom: -40px; /* 让下面的卡片上浮覆盖 */
-            box-sizing: border-box;
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+            box-shadow: 0 4px 20px rgba(44, 62, 80, 0.4);
+            margin-bottom: -60px; /* 让卡片上浮 */
+            z-index: 1;
+            padding-bottom: 40px;
         }
 
         .brand-pill {
-            display: inline-block;
             background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(5px);
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-family: 'Courier New', monospace; /* 代码风格字体 */
-            font-weight: bold;
+            backdrop-filter: blur(10px);
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-weight: 700;
             font-size: 14px;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
+            letter-spacing: 1.5px;
             border: 1px solid rgba(255,255,255,0.2);
-            color: #bdc3c7;
-        }
-
-        .logo-area {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            color: #ecf0f1;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         h1 {
-            font-size: 26px;
-            margin: 0;
+            font-size: 28px;
             font-weight: 800;
+            margin: 0;
             letter-spacing: 1px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
-        p.subtitle {
-            margin-top: 8px;
+        .subtitle {
             font-size: 13px;
-            opacity: 0.8;
+            opacity: 0.85;
+            margin-top: 8px;
             font-weight: 300;
         }
 
-        /* === 导航容器 === */
+        /* 导航容器 */
         .nav-container {
-            width: 100%;
+            width: 90%;
             max-width: 480px;
-            padding: 0 20px;
-            box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            margin-top: 10px; /* 调整上浮位置 */
-            flex: 1; /* 撑开中间区域 */
+            gap: 20px;
+            z-index: 2;
+            padding-bottom: 40px;
         }
 
-        /* === 导航卡片 === */
+        /* 卡片样式 */
         .nav-card {
             background: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px;
+            border-radius: 20px;
+            padding: 25px;
             display: flex;
             align-items: center;
             text-decoration: none;
-            box-shadow: var(--shadow);
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative;
             overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.02);
+            border: 1px solid rgba(255,255,255,0.8);
         }
-
-        /* 左侧装饰条 */
-        .nav-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 5px;
-        }
-        
-        .nav-card.type-filter::before { background: var(--accent); }
-        .nav-card.type-analysis::before { background: var(--primary); }
 
         .nav-card:active {
-            transform: scale(0.98);
-            background-color: #fcfcfc;
+            transform: scale(0.97);
+        }
+
+        .nav-card::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(52, 152, 219, 0.1) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
         }
 
         /* 图标 */
-        .card-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+        .card-icon-box {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 22px;
-            margin-right: 16px;
+            font-size: 26px;
+            margin-right: 20px;
             flex-shrink: 0;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
         }
 
-        .icon-filter { background: rgba(52, 152, 219, 0.1); color: var(--accent); }
-        .icon-analysis { background: rgba(44, 62, 80, 0.1); color: var(--primary); }
+        .icon-filter { background: #e8f4fc; color: #3498db; }
+        .icon-analysis { background: #edf2f7; color: #2c3e50; }
 
         .card-content { flex: 1; }
 
         .card-title {
-            font-size: 17px;
+            font-size: 18px;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--text-main);
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
 
         .card-desc {
-            font-size: 12px;
+            font-size: 13px;
             color: var(--text-sub);
-            line-height: 1.4;
+            line-height: 1.5;
             margin: 0;
         }
 
         .card-arrow {
-            width: 24px;
-            height: 24px;
-            background: #f0f2f5;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #bdc3c7;
-            font-size: 14px;
-            font-weight: bold;
+            color: #dcdcdc;
+            font-size: 20px;
             margin-left: 10px;
         }
 
-        /* === 底部 === */
+        /* 底部 */
         footer {
-            padding: 30px 20px;
+            margin-top: auto;
+            padding: 30px;
             text-align: center;
-            color: #b0b8b9;
         }
-        .footer-domain {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: #95a5a6;
-            font-size: 14px;
+        .copyright {
+            color: #bdc3c7;
+            font-size: 12px;
+            line-height: 1.6;
         }
-        .copyright { font-size: 11px; margin-top: 5px; }
-
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo-area">
-            <div class="brand-pill">158930.COM</div>
-            <h1>六合彩专业助手</h1>
-            <p class="subtitle">大数据分析 · 智能过滤 · 概率回测</p>
-        </div>
+        <div class="brand-pill">158930.COM</div>
+        <h1>六合彩数据中台</h1>
+        <div class="subtitle">大数据分析 · 智能筛选 · 策略回测</div>
     </header>
 
     <div class="nav-container">
         
-        <a href="tool_filter.html" class="nav-card type-filter">
-            <div class="card-icon icon-filter">📊</div>
+        <a href="tool_filter.html" class="nav-card">
+            <div class="card-icon-box icon-filter">📊</div>
             <div class="card-content">
-                <span class="card-title">选号工具 & 过滤</span>
-                <p class="card-desc">粘贴开奖记录，统计热号、生肖、波色，进行多维度智能杀号。</p>
+                <span class="card-title">选号工具 & 智能过滤</span>
+                <p class="card-desc">粘贴开奖记录，一键统计热号，支持生肖、波色、头尾数等多维度精准杀号。</p>
             </div>
             <div class="card-arrow">➜</div>
         </a>
 
-        <a href="tool_analysis.html" class="nav-card type-analysis">
-            <div class="card-icon icon-analysis">🛡️</div>
+        <a href="tool_analysis.html" class="nav-card">
+            <div class="card-icon-box icon-analysis">🛡️</div>
             <div class="card-content">
-                <span class="card-title">历史命中分析</span>
-                <p class="card-desc">基于历史大数据回测，验证您的选号策略在近30期的命中率。</p>
+                <span class="card-title">历史命中回测</span>
+                <p class="card-desc">基于历史大数据，验证您的选号策略在近30期的真实命中率与稳定性。</p>
             </div>
             <div class="card-arrow">➜</div>
         </a>
 
-        </div>
+    </div>
 
     <footer>
-        <div class="footer-domain">158930.COM</div>
-        <div class="copyright">Professional Data Analysis Platform<br>© 2025 All Rights Reserved</div>
+        <div class="copyright">
+            158930.COM Professional Tools<br>
+            © 2025 All Rights Reserved
+        </div>
     </footer>
 
 </body>
