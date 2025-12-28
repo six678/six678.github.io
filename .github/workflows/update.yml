@@ -2,7 +2,7 @@ name: Update Lottery Data
   
 on:  
   schedule:  
-    - cron: '40 13 * * *'  # 每天 21:40 运行一次  
+    - cron: '38 13 * * *'  # 每天 21:40 运行一次  
   workflow_dispatch: # 允许手动点击运行  
   
 jobs:  
