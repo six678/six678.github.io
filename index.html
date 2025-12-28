@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>158930.COM - 六合彩专业数据门户</title>
+    <title>158九点半 - 六合彩专业数据门户</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -14,6 +14,9 @@
                         primary: '#2c3e50',
                         accent: '#3498db',
                         bg: '#f4f7f6',
+                        red: '#e74c3c',
+                        blue: '#3498db',
+                        green: '#2ecc71',
                     },
                     fontFamily: {
                         sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
@@ -33,6 +36,64 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+
+        .ball {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .ball-red {
+            background: linear-gradient(135deg, #ff7675, #d63031);
+        }
+
+        .ball-blue {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+        }
+
+        .ball-green {
+            background: linear-gradient(135deg, #55efc4, #00b894);
+        }
+
+        @keyframes pulse-soft {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .animate-pulse-soft {
+            animation: pulse-soft 2s infinite;
+        }
+
+        .tab-active {
+            color: #3498db;
+            position: relative;
+        }
+
+        .tab-active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 3px;
+            background-color: #3498db;
+            border-radius: 2px;
+        }
+
+        .nav-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-card:active {
+            transform: scale(0.95);
+            background-color: #f8fafc;
+        }
     </style>
 </head>
 
@@ -45,50 +106,98 @@
             class="glass-pill px-5 py-1.5 rounded-full font-mono font-bold text-sm tracking-[1.5px] text-gray-100 mb-4 shadow-sm">
             158930.COM
         </div>
-        <h1 class="text-3xl font-extrabold tracking-wide drop-shadow-md m-0">六合彩数据中台</h1>
+        <h1 class="text-3xl font-extrabold tracking-wide drop-shadow-md m-0">158九点半</h1>
         <div class="text-sm opacity-85 mt-2 font-light">大数据分析 · 智能筛选 · 策略回测</div>
     </header>
 
-    <!-- Nav Container -->
+    <!-- Main Content Container -->
     <div class="w-[90%] max-w-[480px] flex flex-col gap-5 z-20 pb-10">
 
-        <!-- Filter Tool Card -->
-        <a href="tool_filter.html"
-            class="bg-white rounded-[20px] p-6 flex items-center shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 relative overflow-hidden border border-white/80 group">
-            <div
-                class="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-gradient-radial from-blue-500/10 to-transparent">
+        <!-- Latest Result Card -->
+        <div id="latest-result-container"
+            class="bg-white rounded-[24px] p-5 shadow-xl border border-white/80 relative overflow-hidden">
+            <div class="flex justify-between items-center mb-5">
+                <div class="flex gap-4">
+                    <button onclick="switchLottery('macau')" id="tab-macau"
+                        class="text-sm font-bold transition-colors tab-active">澳门六合彩</button>
+                    <button onclick="switchLottery('hk')" id="tab-hk"
+                        class="text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors">香港六合彩</button>
+                </div>
+                <div id="result-expect" class="text-[11px] font-bold text-accent bg-blue-50 px-2 py-1 rounded-lg">
+                    正在获取...
+                </div>
             </div>
 
-            <div
-                class="w-14 h-14 rounded-2xl flex justify-center items-center text-2xl mr-5 shrink-0 bg-blue-50 text-accent shadow-inner">
-                📊
-            </div>
-            <div class="flex-1">
-                <span class="block text-lg font-bold text-primary mb-1.5 group-hover:text-accent transition-colors">选号工具
-                    & 智能过滤</span>
-                <p class="text-[13px] text-gray-400 leading-relaxed m-0">粘贴开奖记录，一键统计热号，支持生肖、波色、头尾数等多维度精准杀号。</p>
-            </div>
-            <div class="text-gray-300 text-xl ml-2 group-hover:translate-x-1 transition-transform">➜</div>
-        </a>
-
-        <!-- Analysis Tool Card -->
-        <a href="tool_analysis.html"
-            class="bg-white rounded-[20px] p-6 flex items-center shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 relative overflow-hidden border border-white/80 group">
-            <div
-                class="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-gradient-radial from-gray-500/10 to-transparent">
+            <div id="balls-container" class="flex justify-between items-center gap-1 min-h-[60px]">
+                <!-- Balls will be injected here -->
+                <div class="w-full flex justify-center py-4">
+                    <div class="animate-spin h-5 w-5 border-2 border-accent border-t-transparent rounded-full"></div>
+                </div>
             </div>
 
+            <div class="mt-4 pt-3 border-t border-gray-50 flex justify-between items-center">
+                <div id="result-time" class="text-[10px] text-gray-400">
+                    --
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse-soft"></span>
+                    <span class="text-[10px] text-gray-400">实时同步中</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Grid Navigation -->
+        <div class="grid grid-cols-2 gap-4">
+
+            <!-- Filter Tool -->
+            <a href="tool_filter.html"
+                class="nav-card bg-white rounded-[24px] p-5 flex flex-col items-center text-center shadow-lg border border-white/80 group">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl mb-3 shadow-inner group-hover:scale-110 transition-transform">
+                    📊
+                </div>
+                <span class="text-sm font-bold text-primary mb-1">选号工具</span>
+                <span class="text-[10px] text-gray-400 leading-tight">智能过滤 · 杀号统计</span>
+            </a>
+
+            <!-- Analysis Tool -->
+            <a href="tool_analysis.html"
+                class="nav-card bg-white rounded-[24px] p-5 flex flex-col items-center text-center shadow-lg border border-white/80 group">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-2xl mb-3 shadow-inner group-hover:scale-110 transition-transform">
+                    🛡️
+                </div>
+                <span class="text-sm font-bold text-primary mb-1">历史回测</span>
+                <span class="text-[10px] text-gray-400 leading-tight">大数据验证 · 命中率</span>
+            </a>
+
+            <!-- Live Stream -->
+            <a href="live.html"
+                class="nav-card bg-white rounded-[24px] p-5 flex flex-col items-center text-center shadow-lg border border-white/80 group relative overflow-hidden">
+                <div class="absolute top-2 right-2 flex h-2 w-2">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </div>
+                <div
+                    class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center text-2xl mb-3 shadow-inner group-hover:scale-110 transition-transform">
+                    🔴
+                </div>
+                <span class="text-sm font-bold text-primary mb-1">开奖直播</span>
+                <span class="text-[10px] text-gray-400 leading-tight">官方信号 · 零延迟</span>
+            </a>
+
+            <!-- More Features (Placeholder for future) -->
             <div
-                class="w-14 h-14 rounded-2xl flex justify-center items-center text-2xl mr-5 shrink-0 bg-gray-100 text-primary shadow-inner">
-                🛡️
+                class="nav-card bg-white/50 rounded-[24px] p-5 flex flex-col items-center text-center border border-dashed border-gray-200 opacity-60">
+                <div class="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center text-2xl mb-3 grayscale">
+                    ✨
+                </div>
+                <span class="text-sm font-bold text-gray-400 mb-1">更多功能</span>
+                <span class="text-[10px] text-gray-400 leading-tight">敬请期待...</span>
             </div>
-            <div class="flex-1">
-                <span
-                    class="block text-lg font-bold text-primary mb-1.5 group-hover:text-accent transition-colors">历史命中回测</span>
-                <p class="text-[13px] text-gray-400 leading-relaxed m-0">基于历史大数据，验证您的选号策略在近30期的真实命中率与稳定性。</p>
-            </div>
-            <div class="text-gray-300 text-xl ml-2 group-hover:translate-x-1 transition-transform">➜</div>
-        </a>
+
+        </div>
 
     </div>
 
@@ -99,6 +208,82 @@
             © 2025 All Rights Reserved
         </div>
     </footer>
+
+    <script>
+        let currentType = 'macau';
+        const apis = {
+            macau: 'https://macaumarksix.com/api/live2',
+            hk: 'https://macaumarksix.com/api/hkjc.com'
+        };
+
+        async function fetchResult() {
+            const container = document.getElementById('balls-container');
+            const expectEl = document.getElementById('result-expect');
+            const timeEl = document.getElementById('result-time');
+
+            try {
+                const response = await fetch(apis[currentType]);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const result = data[0];
+                    expectEl.innerText = '第 ' + result.expect + ' 期';
+                    timeEl.innerText = '开奖时间: ' + result.openTime;
+
+                    const codes = result.openCode.split(',');
+                    const waves = result.wave.split(',');
+                    const zodiacs = result.zodiac.split(',');
+
+                    let html = '';
+                    codes.forEach((code, i) => {
+                        const isSpecial = i === 6;
+                        if (isSpecial) {
+                            html += `<div class="text-gray-300 font-bold text-lg mx-0.5">+</div>`;
+                        }
+
+                        html += `
+                            <div class="flex flex-col items-center gap-1 flex-1">
+                                <div class="ball ball-${waves[i]} w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm ${isSpecial ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}">
+                                    ${code}
+                                </div>
+                                <span class="text-[10px] text-gray-500 font-medium">${zodiacs[i]}</span>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                container.innerHTML = `<div class="text-xs text-red-400 py-4 w-full text-center">数据加载失败，请稍后重试</div>`;
+            }
+        }
+
+        function switchLottery(type) {
+            if (currentType === type) return;
+            currentType = type;
+
+            // Update UI tabs
+            document.getElementById('tab-macau').className = type === 'macau' ? 'text-sm font-bold transition-colors tab-active' : 'text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors';
+            document.getElementById('tab-hk').className = type === 'hk' ? 'text-sm font-bold transition-colors tab-active' : 'text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors';
+
+            // Show loading
+            document.getElementById('balls-container').innerHTML = `
+                <div class="w-full flex justify-center py-4">
+                    <div class="animate-spin h-5 w-5 border-2 border-accent border-t-transparent rounded-full"></div>
+                </div>
+            `;
+            document.getElementById('result-expect').innerText = '正在获取...';
+
+            fetchResult();
+        }
+
+        // Initial fetch
+        fetchResult();
+
+        // Refresh every 30 seconds
+        setInterval(fetchResult, 30000);
+    </script>
 
 </body>
 

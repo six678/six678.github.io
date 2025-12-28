@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>选号工具 - 158930.COM</title>
+    <title>选号工具 - 158九点半</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -133,6 +133,10 @@
                     class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-lg active:bg-gray-50">
                     <span class="w-5 text-center">🛡️</span> 历史分析
                 </a>
+                <a href="live.html"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-lg active:bg-gray-50">
+                    <span class="w-5 text-center">🔴</span> 开奖直播
+                </a>
             </div>
         </div>
     </header>
@@ -154,8 +158,8 @@
     <div id="tab-stats" class="px-4 space-y-4 animate-fade-in">
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-50">
             <textarea id="historyInput"
-                class="w-full h-36 p-4 border border-gray-200 rounded-xl bg-gray-50 font-mono text-sm resize-none focus:border-accent focus:bg-white outline-none transition-colors"
-                placeholder="在此粘贴历史开奖记录...&#10;支持格式：&#10;001期 01 05 12...&#10;002期 18 20 33..."></textarea>
+                class="w-full h-60 p-4 border border-gray-200 rounded-xl bg-gray-50 font-mono text-sm resize-none focus:border-accent focus:bg-white outline-none transition-colors"
+                placeholder="在此粘贴历史开奖记录...&#10;支持格式：&#10;001期 01 05 12...&#10;支持输入生肖：鼠 牛 虎..."></textarea>
 
             <div class="flex gap-2.5 mt-4">
                 <button
@@ -166,7 +170,7 @@
                 <button id="btnCopy"
                     class="flex-1 h-11 bg-accent text-white font-semibold rounded-xl shadow-lg shadow-accent/30 active:scale-95 transition-transform hidden items-center justify-center gap-1.5"
                     onclick="copyStats()">
-                    📋 复制结果
+                    📋 复制全部
                 </button>
                 <button
                     class="flex-[0.4] h-11 bg-gray-400 text-white font-semibold rounded-xl active:scale-95 transition-transform"
@@ -360,27 +364,53 @@
             const input = document.getElementById('historyInput');
             const output = document.getElementById('statsOutput');
             const btnCopy = document.getElementById('btnCopy');
-            const regex = /\b(0?[1-9]|[1-4][0-9])\b/g;
-            const matches = input.value.match(regex);
+
+            // 匹配数字
+            const numRegex = /\b(0?[1-9]|[1-4][0-9])\b/g;
+            const numMatches = input.value.match(numRegex) || [];
+
+            // 匹配生肖
+            const zodiacMatches = [];
+            zodiacs.forEach(z => {
+                const zRegex = new RegExp(z, 'g');
+                const count = (input.value.match(zRegex) || []).length;
+                for (let i = 0; i < count; i++) zodiacMatches.push(z);
+            });
 
             output.innerHTML = ''; statsTextForCopy = "";
 
-            if (!matches || matches.length === 0) {
+            if (numMatches.length === 0 && zodiacMatches.length === 0) {
                 output.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm">⚠️ 请先输入有效数据</div>';
                 btnCopy.classList.add('hidden'); btnCopy.classList.remove('flex'); return;
             }
 
             const counts = {};
-            matches.forEach(m => { const num = parseInt(m, 10); if (num >= 1 && num <= 49) counts[num] = (counts[num] || 0) + 1; });
+
+            // 统计数字
+            numMatches.forEach(m => {
+                const num = parseInt(m, 10);
+                if (num >= 1 && num <= 49) counts[num] = (counts[num] || 0) + 1;
+            });
+
+            // 统计生肖对应的号码
+            zodiacMatches.forEach(z => {
+                const nums = getNumsByZodiac(z);
+                nums.forEach(num => {
+                    counts[num] = (counts[num] || 0) + 1;
+                });
+            });
+
             const groups = {};
             Object.keys(counts).forEach(numKey => {
                 const num = parseInt(numKey); const count = counts[numKey];
                 if (!groups[count]) groups[count] = []; groups[count].push(num);
             });
+
             const appeared = Object.keys(counts).map(Number);
             const missing = [];
             for (let i = 1; i <= 49; i++) if (!appeared.includes(i)) missing.push(i);
             if (missing.length > 0) groups[0] = missing;
+
             const sortedCounts = Object.keys(groups).map(Number).sort((a, b) => b - a);
             let html = ''; let plainText = '【号码统计结果】\n';
 
@@ -388,11 +418,14 @@
                 const nums = groups[count].sort((a, b) => a - b);
                 const fmtNums = nums.map(n => n < 10 ? '0' + n : n);
                 const numsStr = fmtNums.join(', '); const isHot = count >= 3;
+                const groupCopyText = fmtNums.join(', ');
 
                 html += `
                 <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-50">
-                    <div class="flex justify-between text-xs text-gray-400 uppercase tracking-wide mb-1.5">
-                        <span>出现 ${count} 次</span><span>共 ${nums.length} 码</span>
+                    <div class="flex justify-between items-center text-xs text-gray-400 uppercase tracking-wide mb-1.5">
+                        <span>出现 ${count} 次 (共 ${nums.length} 码)</span>
+                        <button class="bg-gray-100 text-accent px-2 py-1 rounded-md font-bold active:scale-95 transition-transform" 
+                                onclick="copyGroup('${groupCopyText}', this)">复制该组</button>
                     </div>
                     <div class="font-mono text-base leading-relaxed break-all ${isHot ? 'text-red font-bold' : 'text-gray-700'}">
                         ${numsStr}
@@ -404,41 +437,66 @@
             btnCopy.classList.remove('hidden'); btnCopy.classList.add('flex');
         }
 
+        function getNumsByZodiac(z) {
+            const results = [];
+            for (let i = 1; i <= 49; i++) {
+                if (getNumInfo(i).zodiac === z) results.push(i);
+            }
+            return results;
+        }
+
+        window.copyGroup = function (text, btn) {
+            const originalText = btn.innerText;
+            copyTextToClipboard(text, btn, true);
+        }
+
         window.clearStats = function () { if (confirm('确定清空？')) { document.getElementById('historyInput').value = ''; document.getElementById('statsOutput').innerHTML = ''; document.getElementById('btnCopy').classList.add('hidden'); document.getElementById('btnCopy').classList.remove('flex'); statsTextForCopy = ""; } }
-        window.copyStats = function () { copyTextToClipboard(statsTextForCopy, 'btnCopy'); }
+        window.copyStats = function () { copyTextToClipboard(statsTextForCopy, document.getElementById('btnCopy')); }
         window.copyFilterResults = function () {
             const balls = document.querySelectorAll('#numbersGrid .ball:not(.disabled)');
             if (balls.length === 0) { alert("无号码可复制"); return; }
             let nums = []; balls.forEach(b => nums.push(b.innerText));
             const text = `【推荐号码】共${nums.length}个:\n${nums.join(', ')}`;
-            copyTextToClipboard(text, 'btnCopyResult');
+            copyTextToClipboard(text, document.getElementById('btnCopyResult'));
         }
 
-        function copyTextToClipboard(text, btnId) {
+        function copyTextToClipboard(text, btn, isSmallBtn = false) {
             if (!text) return;
-            const btn = document.getElementById(btnId);
             const originalText = btn.innerHTML;
             const doCopy = (txt) => {
                 const textArea = document.createElement("textarea"); textArea.value = txt;
                 textArea.style.position = "fixed"; textArea.style.left = "-9999px";
                 document.body.appendChild(textArea); textArea.focus(); textArea.select();
-                try { document.execCommand('copy'); showSuccess(btn, originalText); } catch (err) { alert("复制失败"); }
+                try { document.execCommand('copy'); showSuccess(btn, originalText, isSmallBtn); } catch (err) { alert("复制失败"); }
                 document.body.removeChild(textArea);
             };
-            if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(() => showSuccess(btn, originalText)).catch(() => doCopy(text)); } else { doCopy(text); }
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => showSuccess(btn, originalText, isSmallBtn)).catch(() => doCopy(text));
+            } else {
+                doCopy(text);
+            }
         }
-        function showSuccess(btn, originalText) {
+
+        function showSuccess(btn, originalText, isSmallBtn) {
             btn.innerHTML = '✅ 已复制';
-            btn.classList.add('bg-green'); btn.classList.remove('bg-accent', 'bg-gray-100');
-            if (btn.id === 'btnCopyResult') btn.classList.add('text-white');
+            if (!isSmallBtn) {
+                btn.classList.add('bg-green'); btn.classList.remove('bg-accent', 'bg-gray-100');
+                if (btn.id === 'btnCopyResult') btn.classList.add('text-white');
+            } else {
+                btn.classList.add('text-green'); btn.classList.remove('text-accent');
+            }
 
             setTimeout(() => {
                 btn.innerHTML = originalText;
-                btn.classList.remove('bg-green');
-                if (btn.id === 'btnCopyResult') {
-                    btn.classList.add('bg-gray-100'); btn.classList.remove('text-white');
+                if (!isSmallBtn) {
+                    btn.classList.remove('bg-green');
+                    if (btn.id === 'btnCopyResult') {
+                        btn.classList.add('bg-gray-100'); btn.classList.remove('text-white');
+                    } else {
+                        btn.classList.add('bg-accent');
+                    }
                 } else {
-                    btn.classList.add('bg-accent');
+                    btn.classList.remove('text-green'); btn.classList.add('text-accent');
                 }
             }, 2000);
         }

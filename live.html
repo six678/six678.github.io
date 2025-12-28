@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>开奖直播 - 158九点半</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2c3e50',
+                        accent: '#3498db',
+                        bg: '#f4f7f6',
+                        red: '#e74c3c',
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        mono: ['Monaco', 'Courier New', 'monospace'],
+                    },
+                    zIndex: {
+                        'menu-overlay': '1000',
+                        'header': '1001',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            touch-action: manipulation;
+        }
+
+        .pop-menu {
+            animation: scaleIn 0.2s ease forwards;
+            transform-origin: top right;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Video Player Styles */
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            /* 16:9 Aspect Ratio */
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .live-badge {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-bg text-gray-800 pb-10">
+
+    <!-- Header -->
+    <header
+        class="sticky top-0 z-header bg-primary text-white h-[50px] px-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center w-[60px]">
+            <a href="index.html"
+                class="w-9 h-9 flex items-center justify-center rounded-full active:bg-white/20 transition-colors text-xl">🏠</a>
+        </div>
+        <div class="font-bold text-base tracking-wide flex items-center gap-2">
+            <span>开奖直播</span>
+            <span class="flex h-2 w-2 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-red"></span>
+            </span>
+        </div>
+        <div class="flex items-center justify-end w-[60px] relative">
+            <div class="w-9 h-9 flex items-center justify-center rounded-full active:bg-white/20 transition-colors text-xl cursor-pointer"
+                onclick="toggleMenu()">⸬</div>
+
+            <!-- Dropdown Menu -->
+            <div class="pop-menu absolute top-[45px] right-0 w-40 bg-white rounded-xl shadow-2xl p-2 hidden flex-col border border-gray-100 z-50"
+                id="navMenu">
+                <a href="index.html"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-lg active:bg-gray-50">
+                    <span class="w-5 text-center">🏠</span> 首页门户
+                </a>
+                <a href="tool_filter.html"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-lg active:bg-gray-50">
+                    <span class="w-5 text-center">📊</span> 选号工具
+                </a>
+                <a href="tool_analysis.html"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-lg active:bg-gray-50">
+                    <span class="w-5 text-center">🛡️</span> 历史分析
+                </a>
+                <a href="live.html"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red bg-red-50 rounded-lg">
+                    <span class="w-5 text-center">🔴</span> 开奖直播
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Overlay -->
+    <div class="fixed inset-0 z-menu-overlay hidden" id="menuOverlay" onclick="toggleMenu()"></div>
+
+    <!-- Main Content -->
+    <div class="p-4 max-w-md mx-auto space-y-5 animate-fade-in">
+
+        <!-- Video Player Card -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-50">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">📺</span>
+                    <h2 class="font-bold text-primary">实时直播画面</h2>
+                </div>
+                <div
+                    class="text-xs font-bold text-white bg-red px-2 py-1 rounded-md flex items-center gap-1 live-badge">
+                    <span>LIVE</span>
+                </div>
+            </div>
+
+            <div class="video-container">
+                <video id="video" controls playsinline
+                    poster="https://via.placeholder.com/640x360/000000/ffffff?text=Loading+Stream..."></video>
+            </div>
+
+            <div class="mt-3 flex justify-between items-center text-xs text-gray-400">
+                <span>信号源: MacauJC Live</span>
+                <span id="status" class="text-green font-medium">● 连接正常</span>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-50">
+            <h3 class="font-bold text-gray-700 mb-3 text-sm">📢 直播说明</h3>
+            <ul class="space-y-2 text-xs text-gray-500 leading-relaxed">
+                <li class="flex gap-2">
+                    <span class="text-accent">•</span>
+                    <span>直播信号可能存在 10-30 秒延迟，请以实际开奖结果为准。</span>
+                </li>
+                <li class="flex gap-2">
+                    <span class="text-accent">•</span>
+                    <span>如遇画面卡顿，请尝试刷新页面或切换网络环境。</span>
+                </li>
+                <li class="flex gap-2">
+                    <span class="text-accent">•</span>
+                    <span>支持 iOS/Android 设备直接播放。</span>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('navMenu');
+            const overlay = document.getElementById('menuOverlay');
+            menu.classList.toggle('hidden');
+            menu.classList.toggle('flex');
+            overlay.classList.toggle('hidden');
+        }
+
+        // HLS Player Setup
+        document.addEventListener('DOMContentLoaded', function () {
+            var video = document.getElementById('video');
+            var videoSrc = 'https://live-macaujc.com/live/livestream/new.m3u8';
+            var statusEl = document.getElementById('status');
+
+            if (Hls.isSupported()) {
+                var hls = new Hls();
+                hls.loadSource(videoSrc);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    // Auto-play might be blocked by browsers, so we mute first
+                    video.muted = true;
+                    video.play().catch(function (e) {
+                        console.log("Auto-play blocked:", e);
+                    });
+                });
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) {
+                        statusEl.innerHTML = '<span class="text-red">● 连接断开</span>';
+                        statusEl.className = 'text-red font-medium';
+                    }
+                });
+            }
+            // HLS.js is not supported on platforms that do not have Media Source Extensions (MSE) enabled.
+            // When the browser has built-in HLS support (check using `canPlayType`), we can provide an HLS manifest (i.e. .m3u8 URL) directly to the video element through the `src` property.
+            // This is using the built-in support of the plain video element, without using HLS.js.
+            else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = videoSrc;
+                video.addEventListener('loadedmetadata', function () {
+                    video.muted = true;
+                    video.play().catch(function (e) {
+                        console.log("Auto-play blocked:", e);
+                    });
+                });
+            } else {
+                statusEl.innerHTML = '<span class="text-red">● 设备不支持</span>';
+            }
+        });
+    </script>
+</body>
+
+</html>
