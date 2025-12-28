@@ -1,10 +1,33 @@
 // update_data.js 
 const fs = require('fs');
 
+/**
+ * 带有重试机制的 fetch 辅助函数
+ * @param {string} url 请求地址
+ * @param {number} maxRetries 最大重试次数
+ * @returns {Promise<Response>}
+ */
+async function fetchWithRetry(url, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response;
+        } catch (err) {
+            console.warn(`请求失败 (尝试 ${i + 1}/${maxRetries}): ${url} - ${err.message}`);
+            if (i === maxRetries - 1) throw err;
+            // 等待一小段时间后重试
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+}
+
 async function updateData() {
     try {
         console.log("开始更新数据...");
-        
+
         // 1. 读取仓库中现有的数据 (保留旧数据)
         let oldData = [];
         if (fs.existsSync('data.json')) {
@@ -14,8 +37,13 @@ async function updateData() {
 
         // 2. 抓取最新一期 (Live Data)
         console.log("正在抓取最新直播数据...");
-        const liveRes = await fetch('https://macaumarksix.com/api/live2');
-        const liveData = await liveRes.json();
+        let liveData = [];
+        try {
+            const liveRes = await fetchWithRetry('https://macaumarksix.com/api/live2');
+            liveData = await liveRes.json();
+        } catch (err) {
+            console.error("抓取最新直播数据失败:", err.message);
+        }
 
         // 3. 循环抓取从 2020 年到当前年份的历史数据
         const startYear = 2020;
@@ -24,24 +52,35 @@ async function updateData() {
 
         for (let year = startYear; year <= currentYear; year++) {
             console.log(`正在抓取 ${year} 年历史数据...`);
+            let historyJson = null;
+
+            // 尝试主接口
+            const primaryUrl = `https://history.macaumarksix.com/history/macaujc2/y/${year}`;
+            const backupUrl = `https://open.macaumarksix.com/history/macaujc2/y/${year}`;
+
             try {
-                const historyRes = await fetch(`https://history.macaumarksix.com/history/macaujc2/y/${year}`);
-                const historyJson = await historyRes.json();
-                
-                if (historyJson && historyJson.data) {
-                    allHistoryData = allHistoryData.concat(historyJson.data);
-                    console.log(`成功获取 ${year} 年数据：${historyJson.data.length} 条`);
-                }
+                const historyRes = await fetchWithRetry(primaryUrl, 3);
+                historyJson = await historyRes.json();
             } catch (err) {
-                console.error(`抓取 ${year} 年数据失败:`, err.message);
-                // 某一年失败可以选择跳过或停止
+                console.warn(`主接口抓取 ${year} 年数据失败，尝试备用接口...`);
+                try {
+                    const backupRes = await fetchWithRetry(backupUrl, 3);
+                    historyJson = await backupRes.json();
+                } catch (backupErr) {
+                    console.error(`备用接口抓取 ${year} 年数据也失败:`, backupErr.message);
+                }
+            }
+
+            if (historyJson && historyJson.data) {
+                allHistoryData = allHistoryData.concat(historyJson.data);
+                console.log(`成功获取 ${year} 年数据：${historyJson.data.length} 条`);
             }
         }
 
         // 4. 合并所有数据并去重
         // 优先级：liveData > historyData > oldData (靠前的覆盖靠后的)
         const combined = [...liveData, ...allHistoryData, ...oldData];
-        
+
         // 使用 Map 以 'expect' 为键去重
         const uniqueDataMap = new Map();
         combined.forEach(item => {
@@ -62,7 +101,7 @@ async function updateData() {
 
         // 6. 写入文件
         fs.writeFileSync('data.json', JSON.stringify(uniqueData, null, 2));
-        
+
         console.log(`--------------------------------------`);
         console.log(`数据更新完成！当前总记录数：${uniqueData.length}`);
     } catch (e) {
