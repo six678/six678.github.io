@@ -1,212 +1,105 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>158930.COM - 六合彩专业数据门户</title>
-    <style>
-        :root {
-            --primary-gradient: linear-gradient(135deg, #29323c 0%, #485563 100%);
-            --accent-color: #3498db;
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-main: #2c3e50;
-            --text-sub: #95a5a6;
-            --shadow-soft: 0 10px 25px rgba(0,0,0,0.05);
-            --shadow-hover: 0 15px 35px rgba(0,0,0,0.1);
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2c3e50',
+                        accent: '#3498db',
+                        bg: '#f4f7f6',
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        mono: ['Monaco', 'Courier New', 'monospace'],
+                    }
+                }
+            }
         }
-
+    </script>
+    <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 头部设计 */
-        header {
-            width: 100%;
-            height: 260px;
-            background: var(--primary-gradient);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            border-bottom-left-radius: 40px;
-            border-bottom-right-radius: 40px;
-            box-shadow: 0 4px 20px rgba(44, 62, 80, 0.4);
-            margin-bottom: -60px; /* 让卡片上浮 */
-            z-index: 1;
-            padding-bottom: 40px;
-        }
-
-        .brand-pill {
+        .glass-pill {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
-            padding: 6px 18px;
-            border-radius: 30px;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-weight: 700;
-            font-size: 14px;
-            letter-spacing: 1.5px;
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #ecf0f1;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            font-size: 28px;
-            font-weight: 800;
-            margin: 0;
-            letter-spacing: 1px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-
-        .subtitle {
-            font-size: 13px;
-            opacity: 0.85;
-            margin-top: 8px;
-            font-weight: 300;
-        }
-
-        /* 导航容器 */
-        .nav-container {
-            width: 90%;
-            max-width: 480px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 2;
-            padding-bottom: 40px;
-        }
-
-        /* 卡片样式 */
-        .nav-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 25px;
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            box-shadow: var(--shadow-soft);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.8);
-        }
-
-        .nav-card:active {
-            transform: scale(0.97);
-        }
-
-        .nav-card::after {
-            content: '';
-            position: absolute;
-            right: -20px;
-            top: -20px;
-            width: 80px;
-            height: 80px;
-            background: radial-gradient(circle, rgba(52, 152, 219, 0.1) 0%, rgba(255,255,255,0) 70%);
-            border-radius: 50%;
-        }
-
-        /* 图标 */
-        .card-icon-box {
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 26px;
-            margin-right: 20px;
-            flex-shrink: 0;
-            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
-        }
-
-        .icon-filter { background: #e8f4fc; color: #3498db; }
-        .icon-analysis { background: #edf2f7; color: #2c3e50; }
-
-        .card-content { flex: 1; }
-
-        .card-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-main);
-            display: block;
-            margin-bottom: 6px;
-        }
-
-        .card-desc {
-            font-size: 13px;
-            color: var(--text-sub);
-            line-height: 1.5;
-            margin: 0;
-        }
-
-        .card-arrow {
-            color: #dcdcdc;
-            font-size: 20px;
-            margin-left: 10px;
-        }
-
-        /* 底部 */
-        footer {
-            margin-top: auto;
-            padding: 30px;
-            text-align: center;
-        }
-        .copyright {
-            color: #bdc3c7;
-            font-size: 12px;
-            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
-<body>
 
-    <header>
-        <div class="brand-pill">158930.COM</div>
-        <h1>六合彩数据中台</h1>
-        <div class="subtitle">大数据分析 · 智能筛选 · 策略回测</div>
+<body class="bg-bg min-h-screen flex flex-col items-center m-0 p-0 font-sans text-primary">
+
+    <!-- Header -->
+    <header
+        class="w-full h-[260px] bg-gradient-to-br from-[#29323c] to-[#485563] relative flex flex-col items-center justify-center text-white rounded-b-[40px] shadow-lg -mb-[60px] z-10 pb-10">
+        <div
+            class="glass-pill px-5 py-1.5 rounded-full font-mono font-bold text-sm tracking-[1.5px] text-gray-100 mb-4 shadow-sm">
+            158930.COM
+        </div>
+        <h1 class="text-3xl font-extrabold tracking-wide drop-shadow-md m-0">六合彩数据中台</h1>
+        <div class="text-sm opacity-85 mt-2 font-light">大数据分析 · 智能筛选 · 策略回测</div>
     </header>
 
-    <div class="nav-container">
-        
-        <a href="tool_filter.html" class="nav-card">
-            <div class="card-icon-box icon-filter">📊</div>
-            <div class="card-content">
-                <span class="card-title">选号工具 & 智能过滤</span>
-                <p class="card-desc">粘贴开奖记录，一键统计热号，支持生肖、波色、头尾数等多维度精准杀号。</p>
+    <!-- Nav Container -->
+    <div class="w-[90%] max-w-[480px] flex flex-col gap-5 z-20 pb-10">
+
+        <!-- Filter Tool Card -->
+        <a href="tool_filter.html"
+            class="bg-white rounded-[20px] p-6 flex items-center shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 relative overflow-hidden border border-white/80 group">
+            <div
+                class="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-gradient-radial from-blue-500/10 to-transparent">
             </div>
-            <div class="card-arrow">➜</div>
+
+            <div
+                class="w-14 h-14 rounded-2xl flex justify-center items-center text-2xl mr-5 shrink-0 bg-blue-50 text-accent shadow-inner">
+                📊
+            </div>
+            <div class="flex-1">
+                <span class="block text-lg font-bold text-primary mb-1.5 group-hover:text-accent transition-colors">选号工具
+                    & 智能过滤</span>
+                <p class="text-[13px] text-gray-400 leading-relaxed m-0">粘贴开奖记录，一键统计热号，支持生肖、波色、头尾数等多维度精准杀号。</p>
+            </div>
+            <div class="text-gray-300 text-xl ml-2 group-hover:translate-x-1 transition-transform">➜</div>
         </a>
 
-        <a href="tool_analysis.html" class="nav-card">
-            <div class="card-icon-box icon-analysis">🛡️</div>
-            <div class="card-content">
-                <span class="card-title">历史命中回测</span>
-                <p class="card-desc">基于历史大数据，验证您的选号策略在近30期的真实命中率与稳定性。</p>
+        <!-- Analysis Tool Card -->
+        <a href="tool_analysis.html"
+            class="bg-white rounded-[20px] p-6 flex items-center shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 relative overflow-hidden border border-white/80 group">
+            <div
+                class="absolute -right-5 -top-5 w-20 h-20 rounded-full bg-gradient-radial from-gray-500/10 to-transparent">
             </div>
-            <div class="card-arrow">➜</div>
+
+            <div
+                class="w-14 h-14 rounded-2xl flex justify-center items-center text-2xl mr-5 shrink-0 bg-gray-100 text-primary shadow-inner">
+                🛡️
+            </div>
+            <div class="flex-1">
+                <span
+                    class="block text-lg font-bold text-primary mb-1.5 group-hover:text-accent transition-colors">历史命中回测</span>
+                <p class="text-[13px] text-gray-400 leading-relaxed m-0">基于历史大数据，验证您的选号策略在近30期的真实命中率与稳定性。</p>
+            </div>
+            <div class="text-gray-300 text-xl ml-2 group-hover:translate-x-1 transition-transform">➜</div>
         </a>
 
     </div>
 
-    <footer>
-        <div class="copyright">
+    <!-- Footer -->
+    <footer class="mt-auto p-8 text-center">
+        <div class="text-gray-400 text-xs leading-relaxed">
             158930.COM Professional Tools<br>
             © 2025 All Rights Reserved
         </div>
     </footer>
 
 </body>
+
 </html>

@@ -1,482 +1,511 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>选号工具 - 158930.COM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2c3e50',
+                        accent: '#3498db',
+                        bg: '#f4f7f6',
+                        red: '#e74c3c',
+                        green: '#2ecc71',
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        mono: ['Monaco', 'Courier New', 'monospace'],
+                    },
+                    zIndex: {
+                        'menu-overlay': '1000',
+                        'header': '1001',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --red: #e74c3c;
-            --green: #2ecc71;
-            --bg: #f4f7f6;
-            --white: #ffffff;
-            --header-bg: #2c3e50;
-        }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, Helvetica, Arial, sans-serif; 
-            background: var(--bg); 
-            color: #333; 
-            margin: 0; 
-            padding: 0;
-            touch-action: manipulation; 
-            padding-bottom: 40px;
+        [x-cloak] {
+            display: none !important;
         }
 
-        /* === 修复重点：头部层级提升到 1001 === */
-        .app-header {
-            background: var(--header-bg);
-            color: white;
-            padding: 0 15px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1001; /* 关键修改：比遮罩层高 */
+        body {
+            -webkit-font-smoothing: antialiased;
+            touch-action: manipulation;
         }
 
-        .header-left, .header-right {
-            display: flex;
-            align-items: center;
-            width: 60px;
-        }
-        .header-right { justify-content: flex-end; position: relative; }
-
-        .header-title {
-            font-size: 16px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+        /* Custom Scrollbar for Textarea */
+        textarea::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .btn-icon-header {
-            width: 36px; height: 36px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%;
-            text-decoration: none;
-            color: white;
-            font-size: 20px;
-            transition: background 0.2s;
-            cursor: pointer;
+        textarea::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
-        .btn-icon-header:active { background: rgba(255,255,255,0.2); }
 
-        /* === 修复重点：遮罩层层级设为 1000 === */
-        .menu-overlay {
-            position: fixed; inset: 0; 
-            z-index: 1000; /* 关键修改：比头部低 */
-            display: none;
-            /* background: rgba(0,0,0,0.1); 可选：加一点底色方便调试 */
+        textarea::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
         }
 
         .pop-menu {
-            position: absolute;
-            top: 45px;
-            right: 0;
-            width: 160px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-            padding: 8px;
-            display: none;
-            flex-direction: column;
-            transform-origin: top right;
             animation: scaleIn 0.2s ease forwards;
-            border: 1px solid rgba(0,0,0,0.05);
-            /* 注意：菜单是 header 的子元素，自然跟随 header 的 z-index 1001 */
-        }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        
-        .menu-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 12px 15px;
-            color: #333;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            border-radius: 8px;
-            transition: background 0.1s;
-        }
-        .menu-item:active { background: #f5f7fa; }
-        .menu-item.active { color: var(--accent); background: #f0f9ff; }
-        .menu-icon { width: 20px; text-align: center; font-size: 16px; }
-
-        /* Sticky Tab */
-        .sticky-tab-bar {
-            position: sticky;
-            top: 50px;
-            z-index: 100;
-            background: var(--bg);
-            padding: 10px 15px;
+            transform-origin: top right;
         }
 
-        .nav-tabs {
-            display: flex;
-            background: #e0e5e9;
-            padding: 4px;
-            border-radius: 10px;
-        }
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            padding: 8px 0;
-            font-size: 14px;
-            font-weight: 600;
-            color: #7f8c8d;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .nav-item.active {
-            background: var(--white);
-            color: var(--primary);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
-        .tab-content { display: none; padding: 15px; animation: fadeIn 0.2s ease; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* 卡片与布局 */
-        .section { background: var(--white); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; }
-        
-        textarea.data-input { 
-            width: 100%; height: 140px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 12px; 
-            box-sizing: border-box; font-family: 'Monaco', monospace; font-size: 14px; resize: none;
-            background: #fafafa; outline: none; transition: border 0.2s;
-        }
-        textarea.data-input:focus { border-color: var(--accent); background: #fff; }
-
-        .action-bar { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-stat { flex: 1; height: 44px; border: none; border-radius: 10px; font-weight: 600; font-size: 15px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-run { background: var(--green); box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); }
-        .btn-copy { background: var(--accent); box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); display: none; }
-        .btn-clear { background: #95a5a6; flex: 0.4; }
-
-        .stats-container { margin-top: 15px; }
-        .stat-group { background: white; margin-bottom: 10px; padding: 12px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .stat-header { display: flex; justify-content: space-between; font-size: 12px; color: #999; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-nums { font-family: 'Monaco', monospace; font-size: 16px; color: #333; line-height: 1.5; word-break: break-all; }
-        .hot-num { color: var(--red); font-weight: 800; }
-
-        /* 选号工具样式 */
-        .result-sticky-bar {
-            background: var(--white);
-            border-radius: 16px;
-            padding: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
-            border: 1px solid rgba(0,0,0,0.02);
-        }
-
-        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .result-title { font-size: 16px; color: var(--primary); font-weight: 700; margin: 0; }
-        .count-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 12px; font-size: 13px; margin-left: 5px; }
-        
-        .btn-copy-sm {
-            background: #edf2f7; color: var(--primary); border: none; padding: 6px 12px; 
-            border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
-        }
-
-        .ball-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; justify-items: center; }
         .ball {
-            display: flex; justify-content: center; align-items: center;
-            width: 34px; height: 34px; border-radius: 50%;
-            font-weight: 700; color: white; font-size: 14px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15); transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .ball.red { background: linear-gradient(135deg, #ff7675, #d63031); }
-        .ball.blue { background: linear-gradient(135deg, #74b9ff, #0984e3); }
-        .ball.green { background: linear-gradient(135deg, #55efc4, #00b894); }
-        .ball.disabled { opacity: 0.2; filter: grayscale(100%); transform: scale(0.6); box-shadow: none; }
 
-        .filter-section-title {
-            font-size: 13px; font-weight: 700; color: #95a5a6; margin: 20px 0 10px 0; 
-            text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center;
+        .ball.disabled {
+            opacity: 0.2;
+            filter: grayscale(100%);
+            transform: scale(0.6);
+            box-shadow: none;
         }
-        .filter-section-title::after { content: ''; flex: 1; height: 1px; background: #eee; margin-left: 10px; }
 
-        .settings-bar { 
-            background: #fff8e1; color: #f39c12; padding: 12px; border-radius: 10px; 
-            margin-bottom: 15px; font-size: 14px; display: flex; align-items: center; justify-content: space-between;
+        .ball-red {
+            background: linear-gradient(135deg, #ff7675, #d63031);
         }
-        select { border: none; background: transparent; font-weight: bold; color: #e67e22; font-size: 15px; outline: none; }
 
-        .custom-textarea {
-            width: 100%; height: 80px; padding: 12px; border: 1px solid #eee; border-radius: 10px;
-            background: #fafafa; margin-bottom: 10px; font-size: 14px; resize: none;
+        .ball-blue {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
         }
-        .custom-action-bar { display: flex; gap: 10px; }
-        .btn-apply { flex: 2; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; }
-        .btn-reset { flex: 1; background: #fff0f0; color: var(--red); border: 1px solid #ffcdd2; padding: 10px; border-radius: 8px; font-weight: 600; }
 
-        .btn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; }
-        .filter-btn {
-            border: 1px solid #f0f0f0; background: white; padding: 12px 0; border-radius: 10px; 
-            font-size: 13px; color: #555; transition: all 0.2s; font-weight: 500;
+        .ball-green {
+            background: linear-gradient(135deg, #55efc4, #00b894);
         }
-        .filter-btn.active { 
-            background: var(--primary); color: white; border-color: var(--primary); 
-            box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); transform: translateY(-1px);
+
+        .ball-gray {
+            background: #bdc3c7;
         }
     </style>
 </head>
-<body>
 
-    <header class="app-header">
-        <div class="header-left">
-            <a href="index.html" class="btn-icon-header">🏠</a>
+<body class="bg-bg text-gray-800 pb-10">
+
+    <!-- Header -->
+    <header
+        class="sticky top-0 z-header bg-primary text-white h-[50px] px-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center w-[60px]">
+            <a href="index.html"
+                class="w-9 h-9 flex items-center justify-center rounded-full active:bg-white/20 transition-colors text-xl">🏠</a>
         </div>
-        <div class="header-title">选号工具</div>
-        <div class="header-right">
-            <div class="btn-icon-header" onclick="toggleMenu()">⸬</div>
-            <div class="pop-menu" id="navMenu">
-                <a href="index.html" class="menu-item">
-                    <span class="menu-icon">🏠</span> 首页门户
+        <div class="font-bold text-base tracking-wide">选号工具</div>
+        <div class="flex items-center justify-end w-[60px] relative">
+            <div class="w-9 h-9 flex items-center justify-center rounded-full active:bg-white/20 transition-colors text-xl cursor-pointer"
+                onclick="toggleMenu()">⸬</div>
+
+            <!-- Dropdown Menu -->
+            <div class="pop-menu absolute top-[45px] right-0 w-40 bg-white rounded-xl shadow-2xl p-2 hidden flex-col border border-gray-100 z-50"
+                id="navMenu">
+                <a href="index.html"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-lg active:bg-gray-50">
+                    <span class="w-5 text-center">🏠</span> 首页门户
                 </a>
-                <a href="tool_filter.html" class="menu-item active">
-                    <span class="menu-icon">📊</span> 选号工具
+                <a href="tool_filter.html"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-accent bg-blue-50 rounded-lg">
+                    <span class="w-5 text-center">📊</span> 选号工具
                 </a>
-                <a href="tool_analysis.html" class="menu-item">
-                    <span class="menu-icon">🛡️</span> 历史分析
+                <a href="tool_analysis.html"
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 rounded-lg active:bg-gray-50">
+                    <span class="w-5 text-center">🛡️</span> 历史分析
                 </a>
             </div>
         </div>
     </header>
-    
-    <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 
-    <div class="sticky-tab-bar">
-        <nav class="nav-tabs">
-            <div class="nav-item active" onclick="switchTab('stats')">📊 号码统计</div>
-            <div class="nav-item" onclick="switchTab('filter')">🛡️ 选号过滤</div>
+    <!-- Overlay -->
+    <div class="fixed inset-0 z-menu-overlay hidden" id="menuOverlay" onclick="toggleMenu()"></div>
+
+    <!-- Sticky Tabs -->
+    <div class="sticky top-[50px] z-40 bg-bg p-3">
+        <nav class="flex bg-gray-200 p-1 rounded-xl">
+            <div class="flex-1 text-center py-2 text-sm font-semibold text-gray-500 rounded-lg cursor-pointer transition-all active-tab bg-white text-primary shadow-sm"
+                onclick="switchTab('stats', this)">📊 号码统计</div>
+            <div class="flex-1 text-center py-2 text-sm font-semibold text-gray-500 rounded-lg cursor-pointer transition-all"
+                onclick="switchTab('filter', this)">🛡️ 选号过滤</div>
         </nav>
     </div>
 
-    <div id="tab-stats" class="tab-content active">
-        <div class="section">
-            <textarea id="historyInput" class="data-input" placeholder="在此粘贴历史开奖记录...&#10;支持格式：&#10;001期 01 05 12...&#10;002期 18 20 33..."></textarea>
-            
-            <div class="action-bar">
-                <button class="btn-stat btn-run" onclick="analyzeHistory()">▶ 开始统计</button>
-                <button id="btnCopy" class="btn-stat btn-copy" onclick="copyStats()">📋 复制结果</button>
-                <button class="btn-stat btn-clear" onclick="clearStats()">清空</button>
+    <!-- Stats Tab -->
+    <div id="tab-stats" class="px-4 space-y-4 animate-fade-in">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-50">
+            <textarea id="historyInput"
+                class="w-full h-36 p-4 border border-gray-200 rounded-xl bg-gray-50 font-mono text-sm resize-none focus:border-accent focus:bg-white outline-none transition-colors"
+                placeholder="在此粘贴历史开奖记录...&#10;支持格式：&#10;001期 01 05 12...&#10;002期 18 20 33..."></textarea>
+
+            <div class="flex gap-2.5 mt-4">
+                <button
+                    class="flex-1 h-11 bg-green text-white font-semibold rounded-xl shadow-lg shadow-green/30 active:scale-95 transition-transform flex items-center justify-center gap-1.5"
+                    onclick="analyzeHistory()">
+                    ▶ 开始统计
+                </button>
+                <button id="btnCopy"
+                    class="flex-1 h-11 bg-accent text-white font-semibold rounded-xl shadow-lg shadow-accent/30 active:scale-95 transition-transform hidden items-center justify-center gap-1.5"
+                    onclick="copyStats()">
+                    📋 复制结果
+                </button>
+                <button
+                    class="flex-[0.4] h-11 bg-gray-400 text-white font-semibold rounded-xl active:scale-95 transition-transform"
+                    onclick="clearStats()">清空</button>
             </div>
         </div>
-        <div id="statsOutput" class="stats-container"></div>
+        <div id="statsOutput" class="space-y-2.5"></div>
     </div>
 
-    <div id="tab-filter" class="tab-content">
-        <div class="settings-bar">
+    <!-- Filter Tab -->
+    <div id="tab-filter" class="px-4 space-y-4 hidden animate-fade-in">
+        <div
+            class="bg-yellow-50 text-yellow-600 p-3 rounded-xl text-sm font-bold flex items-center justify-between border border-yellow-100">
             <span>⚙️ 当前年份设置</span>
-            <select id="yearZodiac" onchange="initApp()"></select>
+            <select id="yearZodiac" onchange="initApp()"
+                class="bg-transparent border-none outline-none font-bold text-yellow-700 text-right pr-2"></select>
         </div>
 
-        <div class="result-sticky-bar">
-            <div class="result-header">
-                <h2 class="result-title">剩余结果 <span class="count-badge" id="result-count">49</span></h2>
-                <button class="btn-copy-sm" id="btnCopyResult" onclick="copyFilterResults()">复制号码</button>
+        <div class="bg-white rounded-2xl p-4 shadow-lg border border-gray-50 sticky top-[110px] z-30">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-base font-bold text-primary m-0">剩余结果 <span
+                        class="bg-accent text-white px-2 py-0.5 rounded-full text-xs ml-1" id="result-count">49</span>
+                </h2>
+                <button
+                    class="bg-gray-100 text-primary px-3 py-1.5 rounded-lg text-xs font-bold active:bg-gray-200 transition-colors"
+                    id="btnCopyResult" onclick="copyFilterResults()">复制号码</button>
             </div>
-            <div id="numbersGrid" class="ball-grid"></div>
+            <div id="numbersGrid" class="grid grid-cols-7 gap-1.5 justify-items-center"></div>
         </div>
 
-        <div class="section">
-            <div class="filter-group">
-                <div class="filter-section-title">自定义排除</div>
-                <textarea id="customFilterInput" class="custom-textarea" placeholder="输入号码或生肖，空格隔开 (例: 01 鼠 49)"></textarea>
-                <div class="custom-action-bar">
-                    <button class="btn-apply" onclick="applyCustomFilter()">🚫 执行排除</button>
-                    <button class="btn-reset" onclick="resetFilters()">🔄 重置</button>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-5">
+
+            <!-- Custom Filter -->
+            <div>
+                <div
+                    class="text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 flex items-center after:content-[''] after:flex-1 after:h-px after:bg-gray-100 after:ml-2">
+                    自定义排除</div>
+                <textarea id="customFilterInput"
+                    class="w-full h-20 p-3 border border-gray-100 rounded-xl bg-gray-50 text-sm resize-none mb-2.5 focus:border-accent outline-none"
+                    placeholder="输入号码或生肖，空格隔开 (例: 01 鼠 49)"></textarea>
+                <div class="flex gap-2.5">
+                    <button
+                        class="flex-[2] bg-primary text-white py-2.5 rounded-lg font-semibold text-sm active:scale-95 transition-transform"
+                        onclick="applyCustomFilter()">🚫 执行排除</button>
+                    <button
+                        class="flex-1 bg-red-50 text-red border border-red-100 py-2.5 rounded-lg font-semibold text-sm active:scale-95 transition-transform"
+                        onclick="resetFilters()">🔄 重置</button>
                 </div>
             </div>
 
-            <div class="filter-group">
-                <div class="filter-section-title">按头数排除</div>
-                <div class="btn-grid" style="grid-template-columns: repeat(5, 1fr);">
-                    <button class="filter-btn" onclick="toggleFilter('head', 0, this)">0头</button>
-                    <button class="filter-btn" onclick="toggleFilter('head', 1, this)">1头</button>
-                    <button class="filter-btn" onclick="toggleFilter('head', 2, this)">2头</button>
-                    <button class="filter-btn" onclick="toggleFilter('head', 3, this)">3头</button>
-                    <button class="filter-btn" onclick="toggleFilter('head', 4, this)">4头</button>
+            <!-- Head Filter -->
+            <div>
+                <div
+                    class="text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 flex items-center after:content-[''] after:flex-1 after:h-px after:bg-gray-100 after:ml-2">
+                    按头数排除</div>
+                <div class="grid grid-cols-5 gap-2">
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('head', 0, this)">0头</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('head', 1, this)">1头</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('head', 2, this)">2头</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('head', 3, this)">3头</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('head', 4, this)">4头</button>
                 </div>
             </div>
 
-            <div class="filter-group">
-                <div class="filter-section-title">按尾数排除</div>
-                <div class="btn-grid" style="grid-template-columns: repeat(5, 1fr);">
-                    <button class="filter-btn" onclick="toggleFilter('tail', 1, this)">1尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 2, this)">2尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 3, this)">3尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 4, this)">4尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 5, this)">5尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 6, this)">6尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 7, this)">7尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 8, this)">8尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 9, this)">9尾</button>
-                    <button class="filter-btn" onclick="toggleFilter('tail', 0, this)">0尾</button>
+            <!-- Tail Filter -->
+            <div>
+                <div
+                    class="text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 flex items-center after:content-[''] after:flex-1 after:h-px after:bg-gray-100 after:ml-2">
+                    按尾数排除</div>
+                <div class="grid grid-cols-5 gap-2">
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('tail', 1, this)">1尾</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('tail', 2, this)">2尾</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('tail', 3, this)">3尾</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('tail', 4, this)">4尾</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('tail', 5, this)">5尾</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('tail', 6, this)">6尾</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('tail', 7, this)">7尾</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('tail', 8, this)">8尾</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('tail', 9, this)">9尾</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('tail', 0, this)">0尾</button>
                 </div>
             </div>
 
-            <div class="filter-group">
-                <div class="filter-section-title">按波色 / 单双 / 大小</div>
-                <div class="btn-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 10px;">
-                    <button class="filter-btn" onclick="toggleFilter('color', 'red', this)" style="color:var(--red)">杀红波</button>
-                    <button class="filter-btn" onclick="toggleFilter('color', 'blue', this)" style="color:var(--accent)">杀蓝波</button>
-                    <button class="filter-btn" onclick="toggleFilter('color', 'green', this)" style="color:var(--green)">杀绿波</button>
+            <!-- Color/Parity/Size Filter -->
+            <div>
+                <div
+                    class="text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 flex items-center after:content-[''] after:flex-1 after:h-px after:bg-gray-100 after:ml-2">
+                    按波色 / 单双 / 大小</div>
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-red active:scale-95 transition-all"
+                        onclick="toggleFilter('color', 'red', this)">杀红波</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-accent active:scale-95 transition-all"
+                        onclick="toggleFilter('color', 'blue', this)">杀蓝波</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-green active:scale-95 transition-all"
+                        onclick="toggleFilter('color', 'green', this)">杀绿波</button>
                 </div>
-                <div class="btn-grid" style="grid-template-columns: repeat(4, 1fr);">
-                    <button class="filter-btn" onclick="toggleFilter('parity', 'odd', this)">杀单</button>
-                    <button class="filter-btn" onclick="toggleFilter('parity', 'even', this)">杀双</button>
-                    <button class="filter-btn" onclick="toggleFilter('size', 'small', this)">杀小</button>
-                    <button class="filter-btn" onclick="toggleFilter('size', 'big', this)">杀大</button>
+                <div class="grid grid-cols-4 gap-2">
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('parity', 'odd', this)">杀单</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('parity', 'even', this)">杀双</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('size', 'small', this)">杀小</button>
+                    <button
+                        class="filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all"
+                        onclick="toggleFilter('size', 'big', this)">杀大</button>
                 </div>
             </div>
 
-            <div class="filter-group">
-                <div class="filter-section-title">按生肖排除</div>
-                <div class="btn-grid" id="zodiacFilters" style="grid-template-columns: repeat(4, 1fr);"></div>
+            <!-- Zodiac Filter -->
+            <div>
+                <div
+                    class="text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 flex items-center after:content-[''] after:flex-1 after:h-px after:bg-gray-100 after:ml-2">
+                    按生肖排除</div>
+                <div class="grid grid-cols-4 gap-2" id="zodiacFilters"></div>
             </div>
         </div>
     </div>
 
-<script>
-    function toggleMenu() {
-        const menu = document.getElementById('navMenu');
-        const overlay = document.getElementById('menuOverlay');
-        if (menu.style.display === 'flex') {
-            menu.style.display = 'none';
-            overlay.style.display = 'none';
-        } else {
-            menu.style.display = 'flex';
-            overlay.style.display = 'block';
-        }
-    }
-
-    const totalNums = 49;
-    const zodiacs = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
-    const waves = {
-        red: [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
-        blue: [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
-        green: [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
-    };
-
-    let activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [], head: [], customNums: [] };
-    let currentZodiacIndex = 5; 
-    let statsTextForCopy = "";
-
-    window.onload = function() { initYearSelect(); initApp(); };
-
-    window.switchTab = function(tabName) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        document.getElementById('tab-' + tabName).classList.add('active');
-        const tabs = document.querySelectorAll('.nav-item');
-        if(tabName === 'stats') tabs[0].classList.add('active');
-        else tabs[1].classList.add('active');
-    }
-
-    window.analyzeHistory = function() {
-        const input = document.getElementById('historyInput');
-        const output = document.getElementById('statsOutput');
-        const btnCopy = document.getElementById('btnCopy');
-        const regex = /\b(0?[1-9]|[1-4][0-9])\b/g;
-        const matches = input.value.match(regex);
-        
-        output.innerHTML = ''; statsTextForCopy = "";
-
-        if (!matches || matches.length === 0) {
-            output.innerHTML = '<div style="text-align:center; padding:30px; color:#999; font-size:13px;">⚠️ 请先输入有效数据</div>';
-            btnCopy.style.display = 'none'; return;
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('navMenu');
+            const overlay = document.getElementById('menuOverlay');
+            menu.classList.toggle('hidden');
+            menu.classList.toggle('flex');
+            overlay.classList.toggle('hidden');
         }
 
-        const counts = {};
-        matches.forEach(m => { const num = parseInt(m, 10); if (num >= 1 && num <= 49) counts[num] = (counts[num] || 0) + 1; });
-        const groups = {};
-        Object.keys(counts).forEach(numKey => {
-            const num = parseInt(numKey); const count = counts[numKey];
-            if (!groups[count]) groups[count] = []; groups[count].push(num);
-        });
-        const appeared = Object.keys(counts).map(Number);
-        const missing = [];
-        for(let i=1; i<=49; i++) if(!appeared.includes(i)) missing.push(i);
-        if (missing.length > 0) groups[0] = missing;
-        const sortedCounts = Object.keys(groups).map(Number).sort((a, b) => b - a);
-        let html = ''; let plainText = '【号码统计结果】\n';
-
-        sortedCounts.forEach(count => {
-            const nums = groups[count].sort((a, b) => a - b);
-            const fmtNums = nums.map(n => n < 10 ? '0' + n : n);
-            const numsStr = fmtNums.join(', '); const isHot = count >= 3;
-            html += `<div class="stat-group"><div class="stat-header"><span>出现 ${count} 次</span><span>共 ${nums.length} 码</span></div><div class="stat-nums ${isHot ? 'hot-num' : ''}">${numsStr}</div></div>`;
-            plainText += `[${count}次](${nums.length}个): ${numsStr}\n`;
-        });
-        output.innerHTML = html; statsTextForCopy = plainText; btnCopy.style.display = 'flex';
-    }
-
-    window.clearStats = function() { if(confirm('确定清空？')) { document.getElementById('historyInput').value = ''; document.getElementById('statsOutput').innerHTML = ''; document.getElementById('btnCopy').style.display = 'none'; statsTextForCopy = ""; } }
-    window.copyStats = function() { copyTextToClipboard(statsTextForCopy, 'btnCopy'); }
-    window.copyFilterResults = function() {
-        const balls = document.querySelectorAll('#numbersGrid .ball:not(.disabled)');
-        if(balls.length === 0) { alert("无号码可复制"); return; }
-        let nums = []; balls.forEach(b => nums.push(b.innerText));
-        const text = `【推荐号码】共${nums.length}个:\n${nums.join(', ')}`;
-        copyTextToClipboard(text, 'btnCopyResult');
-    }
-
-    function copyTextToClipboard(text, btnId) {
-        if (!text) return;
-        const btn = document.getElementById(btnId);
-        const originalText = btn.innerHTML;
-        const doCopy = (txt) => {
-            const textArea = document.createElement("textarea"); textArea.value = txt;
-            textArea.style.position = "fixed"; textArea.style.left = "-9999px";
-            document.body.appendChild(textArea); textArea.focus(); textArea.select();
-            try { document.execCommand('copy'); showSuccess(btn, originalText); } catch (err) { alert("复制失败"); }
-            document.body.removeChild(textArea);
+        const totalNums = 49;
+        const zodiacs = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
+        const waves = {
+            red: [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
+            blue: [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
+            green: [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
         };
-        if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(() => showSuccess(btn, originalText)).catch(() => doCopy(text)); } else { doCopy(text); }
-    }
-    function showSuccess(btn, originalText) { btn.innerHTML = '✅ 已复制'; btn.style.background = '#2ecc71'; btn.style.color = 'white'; setTimeout(() => { btn.innerHTML = originalText; btn.style.background = ''; btn.style.color = ''; }, 2000); }
 
-    window.applyCustomFilter = function() {
-        const inputVal = document.getElementById('customFilterInput').value; if (!inputVal.trim()) return;
-        const numMatches = inputVal.match(/\b(0?[1-9]|[1-4][0-9])\b/g);
-        if (numMatches) { numMatches.forEach(n => { const num = parseInt(n, 10); if (!activeFilters.customNums.includes(num)) activeFilters.customNums.push(num); }); }
-        zodiacs.forEach(z => { if (inputVal.includes(z)) { if (!activeFilters.zodiac.includes(z)) { activeFilters.zodiac.push(z); const btns = document.querySelectorAll('#zodiacFilters .filter-btn'); btns.forEach(btn => { if (btn.innerText.includes(z)) btn.classList.add('active'); }); } } });
-        renderGrid();
-    }
-    function initYearSelect() { const select = document.getElementById('yearZodiac'); zodiacs.forEach((z, index) => { const opt = document.createElement('option'); opt.value = index; opt.text = z + "年"; if (z === '蛇') opt.selected = true; select.add(opt); }); }
-    function initApp() { currentZodiacIndex = parseInt(document.getElementById('yearZodiac').value); const zContainer = document.getElementById('zodiacFilters'); zContainer.innerHTML = ''; zodiacs.forEach(z => { const btn = document.createElement('button'); btn.className = 'filter-btn'; btn.innerText = "杀" + z; btn.onclick = function() { toggleFilter('zodiac', z, this); }; zContainer.appendChild(btn); }); renderGrid(); }
-    function renderGrid() {
-        const grid = document.getElementById('numbersGrid'); grid.innerHTML = ''; let validCount = 0;
-        for (let i = 1; i <= totalNums; i++) {
-            const info = getNumInfo(i); const isExcluded = checkFilter(i, info);
-            const div = document.createElement('div'); div.className = `ball ${info.color} ${isExcluded ? 'disabled' : ''}`;
-            div.innerText = i < 10 ? '0' + i : i; if (!isExcluded) validCount++; grid.appendChild(div);
+        let activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [], head: [], customNums: [] };
+        let currentZodiacIndex = 5;
+        let statsTextForCopy = "";
+
+        window.onload = function () { initYearSelect(); initApp(); };
+
+        window.switchTab = function (tabName, el) {
+            document.getElementById('tab-stats').classList.add('hidden');
+            document.getElementById('tab-filter').classList.add('hidden');
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+
+            document.querySelectorAll('nav div').forEach(div => {
+                div.classList.remove('bg-white', 'text-primary', 'shadow-sm');
+            });
+            el.classList.add('bg-white', 'text-primary', 'shadow-sm');
         }
-        document.getElementById('result-count').innerText = validCount;
-    }
-    function getNumInfo(num) {
-        let color = 'gray'; if (waves.red.includes(num)) color = 'red'; else if (waves.blue.includes(num)) color = 'blue'; else if (waves.green.includes(num)) color = 'green';
-        let zIndex = (currentZodiacIndex - (num - 1)) % 12; if (zIndex < 0) zIndex += 12; return { num, color, zodiac: zodiacs[zIndex] };
-    }
-    function checkFilter(num, info) {
-        if (activeFilters.color.includes(info.color)) return true;
-        if (activeFilters.parity.includes('odd') && num % 2 !== 0) return true;
-        if (activeFilters.parity.includes('even') && num % 2 === 0) return true;
-        if (activeFilters.size.includes('small') && num <= 24) return true;
-        if (activeFilters.size.includes('big') && num >= 25) return true;
-        if (activeFilters.zodiac.includes(info.zodiac)) return true;
-        if (activeFilters.tail.includes(num % 10)) return true;
-        if (activeFilters.head.includes(Math.floor(num / 10))) return true;
-        if (activeFilters.customNums.includes(num)) return true;
-        return false;
-    }
-    window.toggleFilter = function(cat, val, btn) { const idx = activeFilters[cat].indexOf(val); if (idx === -1) { activeFilters[cat].push(val); btn.classList.add('active'); } else { activeFilters[cat].splice(idx, 1); btn.classList.remove('active'); } renderGrid(); }
-    window.resetFilters = function() { activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [], head: [], customNums: [] }; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); document.getElementById('customFilterInput').value = ''; renderGrid(); }
-</script>
+
+        window.analyzeHistory = function () {
+            const input = document.getElementById('historyInput');
+            const output = document.getElementById('statsOutput');
+            const btnCopy = document.getElementById('btnCopy');
+            const regex = /\b(0?[1-9]|[1-4][0-9])\b/g;
+            const matches = input.value.match(regex);
+
+            output.innerHTML = ''; statsTextForCopy = "";
+
+            if (!matches || matches.length === 0) {
+                output.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm">⚠️ 请先输入有效数据</div>';
+                btnCopy.classList.add('hidden'); btnCopy.classList.remove('flex'); return;
+            }
+
+            const counts = {};
+            matches.forEach(m => { const num = parseInt(m, 10); if (num >= 1 && num <= 49) counts[num] = (counts[num] || 0) + 1; });
+            const groups = {};
+            Object.keys(counts).forEach(numKey => {
+                const num = parseInt(numKey); const count = counts[numKey];
+                if (!groups[count]) groups[count] = []; groups[count].push(num);
+            });
+            const appeared = Object.keys(counts).map(Number);
+            const missing = [];
+            for (let i = 1; i <= 49; i++) if (!appeared.includes(i)) missing.push(i);
+            if (missing.length > 0) groups[0] = missing;
+            const sortedCounts = Object.keys(groups).map(Number).sort((a, b) => b - a);
+            let html = ''; let plainText = '【号码统计结果】\n';
+
+            sortedCounts.forEach(count => {
+                const nums = groups[count].sort((a, b) => a - b);
+                const fmtNums = nums.map(n => n < 10 ? '0' + n : n);
+                const numsStr = fmtNums.join(', '); const isHot = count >= 3;
+
+                html += `
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-50">
+                    <div class="flex justify-between text-xs text-gray-400 uppercase tracking-wide mb-1.5">
+                        <span>出现 ${count} 次</span><span>共 ${nums.length} 码</span>
+                    </div>
+                    <div class="font-mono text-base leading-relaxed break-all ${isHot ? 'text-red font-bold' : 'text-gray-700'}">
+                        ${numsStr}
+                    </div>
+                </div>`;
+                plainText += `[${count}次](${nums.length}个): ${numsStr}\n`;
+            });
+            output.innerHTML = html; statsTextForCopy = plainText;
+            btnCopy.classList.remove('hidden'); btnCopy.classList.add('flex');
+        }
+
+        window.clearStats = function () { if (confirm('确定清空？')) { document.getElementById('historyInput').value = ''; document.getElementById('statsOutput').innerHTML = ''; document.getElementById('btnCopy').classList.add('hidden'); document.getElementById('btnCopy').classList.remove('flex'); statsTextForCopy = ""; } }
+        window.copyStats = function () { copyTextToClipboard(statsTextForCopy, 'btnCopy'); }
+        window.copyFilterResults = function () {
+            const balls = document.querySelectorAll('#numbersGrid .ball:not(.disabled)');
+            if (balls.length === 0) { alert("无号码可复制"); return; }
+            let nums = []; balls.forEach(b => nums.push(b.innerText));
+            const text = `【推荐号码】共${nums.length}个:\n${nums.join(', ')}`;
+            copyTextToClipboard(text, 'btnCopyResult');
+        }
+
+        function copyTextToClipboard(text, btnId) {
+            if (!text) return;
+            const btn = document.getElementById(btnId);
+            const originalText = btn.innerHTML;
+            const doCopy = (txt) => {
+                const textArea = document.createElement("textarea"); textArea.value = txt;
+                textArea.style.position = "fixed"; textArea.style.left = "-9999px";
+                document.body.appendChild(textArea); textArea.focus(); textArea.select();
+                try { document.execCommand('copy'); showSuccess(btn, originalText); } catch (err) { alert("复制失败"); }
+                document.body.removeChild(textArea);
+            };
+            if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(() => showSuccess(btn, originalText)).catch(() => doCopy(text)); } else { doCopy(text); }
+        }
+        function showSuccess(btn, originalText) {
+            btn.innerHTML = '✅ 已复制';
+            btn.classList.add('bg-green'); btn.classList.remove('bg-accent', 'bg-gray-100');
+            if (btn.id === 'btnCopyResult') btn.classList.add('text-white');
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('bg-green');
+                if (btn.id === 'btnCopyResult') {
+                    btn.classList.add('bg-gray-100'); btn.classList.remove('text-white');
+                } else {
+                    btn.classList.add('bg-accent');
+                }
+            }, 2000);
+        }
+
+        window.applyCustomFilter = function () {
+            const inputVal = document.getElementById('customFilterInput').value; if (!inputVal.trim()) return;
+            const numMatches = inputVal.match(/\b(0?[1-9]|[1-4][0-9])\b/g);
+            if (numMatches) { numMatches.forEach(n => { const num = parseInt(n, 10); if (!activeFilters.customNums.includes(num)) activeFilters.customNums.push(num); }); }
+            zodiacs.forEach(z => { if (inputVal.includes(z)) { if (!activeFilters.zodiac.includes(z)) { activeFilters.zodiac.push(z); const btns = document.querySelectorAll('#zodiacFilters .filter-btn'); btns.forEach(btn => { if (btn.innerText.includes(z)) btn.classList.add('active-filter'); }); } } });
+            renderGrid();
+        }
+        function initYearSelect() { const select = document.getElementById('yearZodiac'); zodiacs.forEach((z, index) => { const opt = document.createElement('option'); opt.value = index; opt.text = z + "年"; if (z === '蛇') opt.selected = true; select.add(opt); }); }
+        function initApp() { currentZodiacIndex = parseInt(document.getElementById('yearZodiac').value); const zContainer = document.getElementById('zodiacFilters'); zContainer.innerHTML = ''; zodiacs.forEach(z => { const btn = document.createElement('button'); btn.className = 'filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all'; btn.innerText = "杀" + z; btn.onclick = function () { toggleFilter('zodiac', z, this); }; zContainer.appendChild(btn); }); renderGrid(); }
+        function renderGrid() {
+            const grid = document.getElementById('numbersGrid'); grid.innerHTML = ''; let validCount = 0;
+            for (let i = 1; i <= totalNums; i++) {
+                const info = getNumInfo(i); const isExcluded = checkFilter(i, info);
+                let colorClass = 'ball-gray';
+                if (info.color === 'red') colorClass = 'ball-red';
+                else if (info.color === 'blue') colorClass = 'ball-blue';
+                else if (info.color === 'green') colorClass = 'ball-green';
+
+                const div = document.createElement('div');
+                div.className = `ball w-[34px] h-[34px] rounded-full flex justify-center items-center text-white font-bold text-sm ${colorClass} ${isExcluded ? 'disabled' : ''}`;
+                div.innerText = i < 10 ? '0' + i : i; if (!isExcluded) validCount++; grid.appendChild(div);
+            }
+            document.getElementById('result-count').innerText = validCount;
+        }
+        function getNumInfo(num) {
+            let color = 'gray'; if (waves.red.includes(num)) color = 'red'; else if (waves.blue.includes(num)) color = 'blue'; else if (waves.green.includes(num)) color = 'green';
+            let zIndex = (currentZodiacIndex - (num - 1)) % 12; if (zIndex < 0) zIndex += 12; return { num, color, zodiac: zodiacs[zIndex] };
+        }
+        function checkFilter(num, info) {
+            if (activeFilters.color.includes(info.color)) return true;
+            if (activeFilters.parity.includes('odd') && num % 2 !== 0) return true;
+            if (activeFilters.parity.includes('even') && num % 2 === 0) return true;
+            if (activeFilters.size.includes('small') && num <= 24) return true;
+            if (activeFilters.size.includes('big') && num >= 25) return true;
+            if (activeFilters.zodiac.includes(info.zodiac)) return true;
+            if (activeFilters.tail.includes(num % 10)) return true;
+            if (activeFilters.head.includes(Math.floor(num / 10))) return true;
+            if (activeFilters.customNums.includes(num)) return true;
+            return false;
+        }
+        window.toggleFilter = function (cat, val, btn) {
+            const idx = activeFilters[cat].indexOf(val);
+            if (idx === -1) {
+                activeFilters[cat].push(val);
+                btn.classList.add('bg-primary', 'text-white', 'border-primary');
+                btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-100');
+            } else {
+                activeFilters[cat].splice(idx, 1);
+                btn.classList.remove('bg-primary', 'text-white', 'border-primary');
+                btn.classList.add('bg-white', 'text-gray-600', 'border-gray-100');
+            }
+            renderGrid();
+        }
+        window.resetFilters = function () {
+            activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [], head: [], customNums: [] };
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('bg-primary', 'text-white', 'border-primary');
+                b.classList.add('bg-white', 'text-gray-600', 'border-gray-100');
+            });
+            document.getElementById('customFilterInput').value = '';
+            renderGrid();
+        }
+    </script>
 </body>
+
 </html>
