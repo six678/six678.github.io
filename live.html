@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>开奖直播 - 158九点半</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- NodePlayer.js SDK (Local) -->
+    <script src="js/NodePlayer.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -64,13 +65,14 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        video {
+        #video-canvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             object-fit: contain;
+            background-color: #000;
         }
 
         .live-badge {
@@ -89,6 +91,46 @@
             100% {
                 opacity: 1;
             }
+        }
+
+        /* Play Overlay for Mobile */
+        .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+            transition: transform 0.2s;
+        }
+
+        .play-btn:active {
+            transform: scale(0.95);
+        }
+
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 10px 0 10px 18px;
+            border-color: transparent transparent transparent white;
+            margin-left: 4px;
         }
     </style>
 </head>
@@ -156,13 +198,22 @@
             </div>
 
             <div class="video-container">
-                <video id="video" controls playsinline
-                    poster="https://via.placeholder.com/640x360/000000/ffffff?text=Loading+Stream..."></video>
+                <canvas id="video-canvas"></canvas>
+                <div id="play-overlay" class="play-overlay" onclick="startPlay()">
+                    <div class="play-btn">
+                        <div class="play-icon"></div>
+                    </div>
+                </div>
             </div>
 
             <div class="mt-3 flex justify-between items-center text-xs text-gray-400">
-                <span>信号源: MacauJC Live</span>
-                <span id="status" class="text-green font-medium">● 连接正常</span>
+                <div class="flex gap-2">
+                    <button onclick="switchLine(0)" id="btn-line-0"
+                        class="px-2 py-1 rounded bg-accent text-white font-medium transition-colors">线路一</button>
+                    <button onclick="switchLine(1)" id="btn-line-1"
+                        class="px-2 py-1 rounded bg-gray-100 text-gray-600 font-medium transition-colors">线路二</button>
+                </div>
+                <span id="status" class="text-gray-500 font-medium">● 准备就绪</span>
             </div>
         </div>
 
@@ -180,7 +231,7 @@
                 </li>
                 <li class="flex gap-2">
                     <span class="text-accent">•</span>
-                    <span>支持 iOS/Android 设备直接播放。</span>
+                    <span>已针对手机端优化，支持自动重连和屏幕常亮。</span>
                 </li>
             </ul>
         </div>
@@ -196,43 +247,109 @@
             overlay.classList.toggle('hidden');
         }
 
-        // HLS Player Setup
-        document.addEventListener('DOMContentLoaded', function () {
-            var video = document.getElementById('video');
-            var videoSrc = 'https://live-macaujc.com/live/livestream/new.m3u8';
-            var statusEl = document.getElementById('status');
+        // NodePlayer Setup
+        let player = null;
+        const videoSrcs = [
+            'https://play3636.zdwafis.com/live/mosixmark.flv',
+            'https://play888.00853lhc.live/live/mosixmark.flv'
+        ];
+        let currentLine = 0;
+        let isPlaying = false;
 
-            if (Hls.isSupported()) {
-                var hls = new Hls();
-                hls.loadSource(videoSrc);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                    // Auto-play might be blocked by browsers, so we mute first
-                    video.muted = true;
-                    video.play().catch(function (e) {
-                        console.log("Auto-play blocked:", e);
-                    });
-                });
-                hls.on(Hls.Events.ERROR, function (event, data) {
-                    if (data.fatal) {
-                        statusEl.innerHTML = '<span class="text-red">● 连接断开</span>';
-                        statusEl.className = 'text-red font-medium';
-                    }
-                });
-            }
-            // HLS.js is not supported on platforms that do not have Media Source Extensions (MSE) enabled.
-            // When the browser has built-in HLS support (check using `canPlayType`), we can provide an HLS manifest (i.e. .m3u8 URL) directly to the video element through the `src` property.
-            // This is using the built-in support of the plain video element, without using HLS.js.
-            else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = videoSrc;
-                video.addEventListener('loadedmetadata', function () {
-                    video.muted = true;
-                    video.play().catch(function (e) {
-                        console.log("Auto-play blocked:", e);
-                    });
-                });
+        function initPlayer(url) {
+            const statusEl = document.getElementById('status');
+            const overlay = document.getElementById('play-overlay');
+
+            if (player) {
+                player.stop();
             } else {
-                statusEl.innerHTML = '<span class="text-red">● 设备不支持</span>';
+                // 移动端音频引擎激活
+                NodePlayer.load(() => {
+                    if (/(Android)|(iOS)/i.test(navigator.userAgent)) {
+                        NodePlayer.activeAudioEngine(true);
+                    }
+
+                    player = new NodePlayer();
+                    player.setView('video-canvas');
+                    player.setBufferTime(1000); // 增加缓冲时间以提高稳定性
+                    player.setScaleMode(1); // 缩放模式：1 为等比缩放
+                    player.setKeepScreenOn(); // 保持屏幕常亮
+                    player.setAutoReconnect(true); // 自动重连
+
+                    player.on('start', () => {
+                        console.log('播放开始');
+                        statusEl.innerHTML = '<span class="text-green">● 直播中</span>';
+                        overlay.style.display = 'none';
+                        isPlaying = true;
+                    });
+
+                    player.on('stop', () => {
+                        console.log('播放停止');
+                        statusEl.innerHTML = '<span class="text-gray-500">● 已停止</span>';
+                        overlay.style.display = 'flex';
+                        isPlaying = false;
+                    });
+
+                    player.on('error', (e) => {
+                        console.error('播放器错误:', e);
+                        statusEl.innerHTML = '<span class="text-red">● 连接异常，正在重试...</span>';
+                        // 自动重连机制已启用，这里仅更新 UI
+                    });
+
+                    // 首次加载后尝试播放
+                    startPlay();
+                });
+                return; // 等待 load 回调
+            }
+
+            // 如果 player 已经初始化，直接播放新 URL
+            startPlay(url);
+        }
+
+        function startPlay(url) {
+            const targetUrl = url || videoSrcs[currentLine];
+            if (!player) return;
+
+            try {
+                player.start(targetUrl);
+            } catch (err) {
+                console.error('启动播放器失败:', err);
+                const statusEl = document.getElementById('status');
+                statusEl.innerHTML = '<span class="text-red">● 初始化失败</span>';
+            }
+        }
+
+        function switchLine(index) {
+            currentLine = index;
+            // 更新按钮样式
+            for (let i = 0; i < videoSrcs.length; i++) {
+                const btn = document.getElementById(`btn-line-${i}`);
+                if (i === index) {
+                    btn.classList.remove('bg-gray-100', 'text-gray-600');
+                    btn.classList.add('bg-accent', 'text-white');
+                } else {
+                    btn.classList.remove('bg-accent', 'text-white');
+                    btn.classList.add('bg-gray-100', 'text-gray-600');
+                }
+            }
+
+            // 如果正在播放，直接切换；否则只更新当前线路索引，等待用户点击播放
+            if (player) {
+                startPlay(videoSrcs[index]);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // 检查 NodePlayer 是否已加载
+            if (typeof NodePlayer !== 'undefined') {
+                initPlayer(videoSrcs[0]);
+            } else {
+                // 如果脚本是异步加载的，可能需要轮询或监听 load 事件
+                // 这里假设是同步加载或已缓存
+                // 再次尝试通过 load 回调初始化
+                NodePlayer.load(() => {
+                    initPlayer(videoSrcs[0]);
+                });
             }
         });
     </script>
