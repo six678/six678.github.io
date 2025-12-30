@@ -77,14 +77,37 @@
         .ball {
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
             transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
         }
 
-        .ball.disabled {
-            opacity: 0.2;
-            filter: grayscale(100%);
-            transform: scale(0.6);
+
+
+
+
+        .ball.not-selected {
+            opacity: 0.3;
+            filter: grayscale(80%);
+            transform: scale(0.85);
             box-shadow: none;
         }
+
+        .ball.excluded {
+            position: relative;
+        }
+
+        .ball.excluded::after {
+            content: '✕';
+            position: absolute;
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .ball.excluded.not-selected::after {
+            display: none;
+        }
+
 
         .ball-red {
             background: linear-gradient(135deg, #ff7675, #d63031);
@@ -159,8 +182,8 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-50">
             <textarea id="historyInput"
                 class="w-full h-60 p-4 border border-gray-200 rounded-xl bg-gray-50 font-mono text-sm resize-none focus:border-accent focus:bg-white outline-none transition-colors"
+                oninput="analyzeHistory()"
                 placeholder="在此粘贴历史开奖记录...&#10;支持格式：&#10;001期 01 05 12...&#10;支持输入生肖：鼠 牛 虎..."></textarea>
-
             <div class="flex gap-2.5 mt-4">
                 <button
                     class="flex-1 h-11 bg-green text-white font-semibold rounded-xl shadow-lg shadow-green/30 active:scale-95 transition-transform flex items-center justify-center gap-1.5"
@@ -191,17 +214,48 @@
 
         <div class="bg-white rounded-2xl p-4 shadow-lg border border-gray-50 sticky top-[110px] z-30">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-base font-bold text-primary m-0">剩余结果 <span
-                        class="bg-accent text-white px-2 py-0.5 rounded-full text-xs ml-1" id="result-count">49</span>
-                </h2>
-                <button
-                    class="bg-gray-100 text-primary px-3 py-1.5 rounded-lg text-xs font-bold active:bg-gray-200 transition-colors"
-                    id="btnCopyResult" onclick="copyFilterResults()">复制号码</button>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-base font-bold text-primary m-0">剩余结果 <span
+                            class="bg-accent text-white px-2 py-0.5 rounded-full text-xs ml-1"
+                            id="result-count">0</span>
+                    </h2>
+                </div>
+
+
+
+                <div class="flex gap-2">
+                    <button
+                        class="bg-green/10 text-green px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-all"
+                        onclick="selectAll()">全选</button>
+                    <button
+                        class="bg-gray-100 text-gray-500 px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-all"
+                        onclick="clearAll()">清空</button>
+                    <button
+                        class="bg-accent text-white px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-all"
+                        id="btnCopyResult" onclick="copyFilterResults()">复制号码</button>
+                </div>
             </div>
             <div id="numbersGrid" class="grid grid-cols-7 gap-1.5 justify-items-center"></div>
         </div>
 
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-5">
+
+
+
+            <!-- Custom Include -->
+            <div>
+                <div
+                    class="text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-2.5 flex items-center after:content-[''] after:flex-1 after:h-px after:bg-gray-100 after:ml-2">
+                    自定义加入</div>
+                <textarea id="customIncludeInput"
+                    class="w-full h-20 p-3 border border-gray-100 rounded-xl bg-gray-50 text-sm resize-none mb-2.5 focus:border-green outline-none"
+                    placeholder="输入想要保留的号码或生肖，空格隔开 (例: 08 龙 16)"></textarea>
+                <div class="flex gap-2.5">
+                    <button
+                        class="flex-1 bg-green text-white py-2.5 rounded-lg font-semibold text-sm active:scale-95 transition-transform"
+                        onclick="applyCustomInclude()">✅ 执行加入</button>
+                </div>
+            </div>
 
             <!-- Custom Filter -->
             <div>
@@ -343,7 +397,7 @@
             green: [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
         };
 
-        let activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [], head: [], customNums: [] };
+        let activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [], head: [], customNums: [], baseNums: [] };
         let currentZodiacIndex = 5;
         let statsTextForCopy = "";
 
@@ -380,7 +434,7 @@
             output.innerHTML = ''; statsTextForCopy = "";
 
             if (numMatches.length === 0 && zodiacMatches.length === 0) {
-                output.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm">⚠️ 请先输入有效数据</div>';
+                output.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm">⚠️ 请先输入有效号码或生肖</div>';
                 btnCopy.classList.add('hidden'); btnCopy.classList.remove('flex'); return;
             }
 
@@ -425,7 +479,7 @@
                     <div class="flex justify-between items-center text-xs text-gray-400 uppercase tracking-wide mb-1.5">
                         <span>出现 ${count} 次 (共 ${nums.length} 码)</span>
                         <button class="bg-gray-100 text-accent px-2 py-1 rounded-md font-bold active:scale-95 transition-transform" 
-                                onclick="copyGroup('${groupCopyText}', this)">复制该组</button>
+                                onclick="copyGroup('(共${nums.length}码): ${groupCopyText}', this)">复制该组</button>
                     </div>
                     <div class="font-mono text-base leading-relaxed break-all ${isHot ? 'text-red font-bold' : 'text-gray-700'}">
                         ${numsStr}
@@ -450,10 +504,10 @@
             copyTextToClipboard(text, btn, true);
         }
 
-        window.clearStats = function () { if (confirm('确定清空？')) { document.getElementById('historyInput').value = ''; document.getElementById('statsOutput').innerHTML = ''; document.getElementById('btnCopy').classList.add('hidden'); document.getElementById('btnCopy').classList.remove('flex'); statsTextForCopy = ""; } }
+        window.clearStats = function () { document.getElementById('historyInput').value = ''; document.getElementById('statsOutput').innerHTML = ''; document.getElementById('btnCopy').classList.add('hidden'); document.getElementById('btnCopy').classList.remove('flex'); statsTextForCopy = ""; }
         window.copyStats = function () { copyTextToClipboard(statsTextForCopy, document.getElementById('btnCopy')); }
         window.copyFilterResults = function () {
-            const balls = document.querySelectorAll('#numbersGrid .ball:not(.disabled)');
+            const balls = document.querySelectorAll('#numbersGrid .ball:not(.not-selected):not(.excluded)');
             if (balls.length === 0) { alert("无号码可复制"); return; }
             let nums = []; balls.forEach(b => nums.push(b.innerText));
             const text = `【推荐号码】共${nums.length}个:\n${nums.join(', ')}`;
@@ -508,28 +562,85 @@
             zodiacs.forEach(z => { if (inputVal.includes(z)) { if (!activeFilters.zodiac.includes(z)) { activeFilters.zodiac.push(z); const btns = document.querySelectorAll('#zodiacFilters .filter-btn'); btns.forEach(btn => { if (btn.innerText.includes(z)) btn.classList.add('active-filter'); }); } } });
             renderGrid();
         }
+        window.applyCustomInclude = function () {
+            const inputVal = document.getElementById('customIncludeInput').value; if (!inputVal.trim()) return;
+            const numMatches = inputVal.match(/\b(0?[1-9]|[1-4][0-9])\b/g);
+            if (numMatches) { numMatches.forEach(n => { const num = parseInt(n, 10); if (!activeFilters.baseNums.includes(num)) activeFilters.baseNums.push(num); }); }
+            zodiacs.forEach(z => { if (inputVal.includes(z)) { const nums = getNumsByZodiac(z); nums.forEach(num => { if (!activeFilters.baseNums.includes(num)) activeFilters.baseNums.push(num); }); } });
+            renderGrid();
+        }
+        window.toggleBaseNum = function (num) {
+            const idx = activeFilters.baseNums.indexOf(num);
+            if (idx === -1) activeFilters.baseNums.push(num);
+            else activeFilters.baseNums.splice(idx, 1);
+            renderGrid();
+        }
+        window.selectAll = function () {
+            activeFilters.baseNums = [];
+            for (let i = 1; i <= 49; i++) activeFilters.baseNums.push(i);
+            renderGrid();
+        }
+        window.clearAll = function () {
+            activeFilters.baseNums = [];
+            renderGrid();
+        }
+
+
+
+
+
+
+
         function initYearSelect() { const select = document.getElementById('yearZodiac'); zodiacs.forEach((z, index) => { const opt = document.createElement('option'); opt.value = index; opt.text = z + "年"; if (z === '蛇') opt.selected = true; select.add(opt); }); }
         function initApp() { currentZodiacIndex = parseInt(document.getElementById('yearZodiac').value); const zContainer = document.getElementById('zodiacFilters'); zContainer.innerHTML = ''; zodiacs.forEach(z => { const btn = document.createElement('button'); btn.className = 'filter-btn border border-gray-100 bg-white py-3 rounded-xl text-[13px] font-medium text-gray-600 active:scale-95 transition-all'; btn.innerText = "杀" + z; btn.onclick = function () { toggleFilter('zodiac', z, this); }; zContainer.appendChild(btn); }); renderGrid(); }
         function renderGrid() {
             const grid = document.getElementById('numbersGrid'); grid.innerHTML = ''; let validCount = 0;
+
             for (let i = 1; i <= totalNums; i++) {
-                const info = getNumInfo(i); const isExcluded = checkFilter(i, info);
+                const info = getNumInfo(i);
+                const isSelected = activeFilters.baseNums.includes(i);
+                const isExcluded = checkFilter(i, info);
+
                 let colorClass = 'ball-gray';
                 if (info.color === 'red') colorClass = 'ball-red';
                 else if (info.color === 'blue') colorClass = 'ball-blue';
                 else if (info.color === 'green') colorClass = 'ball-green';
 
+
+
+
+
+
                 const div = document.createElement('div');
-                div.className = `ball w-[34px] h-[34px] rounded-full flex justify-center items-center text-white font-bold text-sm ${colorClass} ${isExcluded ? 'disabled' : ''}`;
-                div.innerText = i < 10 ? '0' + i : i; if (!isExcluded) validCount++; grid.appendChild(div);
+                div.className = `ball w-[34px] h-[34px] rounded-full flex justify-center items-center text-white font-bold text-sm ${colorClass} ${!isSelected ? 'not-selected' : ''} ${isExcluded ? 'excluded' : ''}`;
+                div.innerText = i < 10 ? '0' + i : i;
+                div.onclick = () => toggleBaseNum(i);
+                if (isSelected && !isExcluded) validCount++;
+                grid.appendChild(div);
             }
             document.getElementById('result-count').innerText = validCount;
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         function getNumInfo(num) {
             let color = 'gray'; if (waves.red.includes(num)) color = 'red'; else if (waves.blue.includes(num)) color = 'blue'; else if (waves.green.includes(num)) color = 'green';
             let zIndex = (currentZodiacIndex - (num - 1)) % 12; if (zIndex < 0) zIndex += 12; return { num, color, zodiac: zodiacs[zIndex] };
         }
         function checkFilter(num, info) {
+
             if (activeFilters.color.includes(info.color)) return true;
             if (activeFilters.parity.includes('odd') && num % 2 !== 0) return true;
             if (activeFilters.parity.includes('even') && num % 2 === 0) return true;
@@ -555,12 +666,13 @@
             renderGrid();
         }
         window.resetFilters = function () {
-            activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [], head: [], customNums: [] };
+            activeFilters = { color: [], parity: [], size: [], zodiac: [], tail: [], head: [], customNums: [], baseNums: [] };
             document.querySelectorAll('.filter-btn').forEach(b => {
                 b.classList.remove('bg-primary', 'text-white', 'border-primary');
                 b.classList.add('bg-white', 'text-gray-600', 'border-gray-100');
             });
             document.getElementById('customFilterInput').value = '';
+            document.getElementById('customIncludeInput').value = '';
             renderGrid();
         }
     </script>
