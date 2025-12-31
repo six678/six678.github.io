@@ -84,29 +84,30 @@
 
 
 
-        .ball.not-selected {
+        .ball.not-selected,
+        .ball.excluded {
             opacity: 0.3;
             filter: grayscale(80%);
             transform: scale(0.85);
             box-shadow: none;
         }
 
-        .ball.excluded {
-            position: relative;
-        }
 
-        .ball.excluded::after {
-            content: '✕';
-            position: absolute;
-            font-size: 20px;
-            color: rgba(255, 255, 255, 0.8);
-            font-weight: bold;
-            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
-        }
 
-        .ball.excluded.not-selected::after {
-            display: none;
-        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         .ball-red {
@@ -559,7 +560,20 @@
             const inputVal = document.getElementById('customFilterInput').value; if (!inputVal.trim()) return;
             const numMatches = inputVal.match(/\b(0?[1-9]|[1-4][0-9])\b/g);
             if (numMatches) { numMatches.forEach(n => { const num = parseInt(n, 10); if (!activeFilters.customNums.includes(num)) activeFilters.customNums.push(num); }); }
-            zodiacs.forEach(z => { if (inputVal.includes(z)) { if (!activeFilters.zodiac.includes(z)) { activeFilters.zodiac.push(z); const btns = document.querySelectorAll('#zodiacFilters .filter-btn'); btns.forEach(btn => { if (btn.innerText.includes(z)) btn.classList.add('active-filter'); }); } } });
+            zodiacs.forEach(z => {
+                if (inputVal.includes(z)) {
+                    if (!activeFilters.zodiac.includes(z)) {
+                        activeFilters.zodiac.push(z);
+                        const btns = document.querySelectorAll('#zodiacFilters .filter-btn');
+                        btns.forEach(btn => {
+                            if (btn.innerText.includes(z)) {
+                                btn.classList.add('bg-primary', 'text-white', 'border-primary');
+                                btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-100');
+                            }
+                        });
+                    }
+                }
+            });
             renderGrid();
         }
         window.applyCustomInclude = function () {
