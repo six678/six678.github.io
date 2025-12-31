@@ -137,86 +137,111 @@
         <div x-show="!loading" x-cloak class="p-4 space-y-5 animate-fade-in">
 
             <!-- Filter Card -->
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-50 space-y-5">
-                <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-50 space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-gray-100 cursor-pointer"
+                    @click="showFilters = !showFilters">
                     <div class="font-bold text-gray-700 flex items-center gap-2">
                         <span class="text-lg">🎯</span> 模拟条件
                     </div>
-                    <div class="relative">
-                        <select x-model="selectedYear" @change="resetPagination()"
-                            class="appearance-none bg-blue-50 text-accent text-xs pl-3 pr-8 py-1.5 rounded-lg font-bold outline-none">
-                            <template x-for="y in years">
-                                <option :value="y" x-text="y+'年'"></option>
-                            </template>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-accent">
-                            <svg class="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    <div class="flex items-center gap-3">
+                        <div class="relative" @click.stop>
+                            <select x-model="selectedYear" @change="resetPagination()"
+                                class="appearance-none bg-blue-50 text-accent text-xs pl-3 pr-8 py-1.5 rounded-lg font-bold outline-none">
+                                <template x-for="y in years">
+                                    <option :value="y" x-text="y+'年'"></option>
+                                </template>
+                            </select>
+                            <div
+                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-accent">
+                                <svg class="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-gray-400 transition-transform duration-300"
+                            :class="{'rotate-180': showFilters}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
                             </svg>
                         </div>
                     </div>
                 </div>
 
-                <!-- Zodiac Filter -->
-                <div>
-                    <div class="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-2">生肖筛选</div>
-                    <div class="grid grid-cols-6 gap-2">
-                        <template x-for="z in zodiacs">
-                            <button @click="toggleZodiac(z)"
-                                :class="highlightZodiacs.includes(z) ? 'bg-primary text-white border-primary' : 'bg-white text-gray-500 border-gray-200'"
-                                class="h-8 flex items-center justify-center text-xs rounded-lg border shadow-sm transition-all active:scale-95"
-                                x-text="z"></button>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Number Filter -->
-                <div>
-                    <div class="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-2">号码筛选</div>
-                    <div class="grid grid-cols-7 gap-1.5">
-                        <template x-for="n in 49">
-                            <button @click="toggleNumber(n)"
-                                :class="highlightNumbers.includes(n) ? 'bg-primary text-white border-primary font-bold' : 'bg-white text-gray-400 border-gray-100'"
-                                class="py-1.5 text-[10px] rounded border transition-all" x-text="n < 10 ? '0'+n : n">
-                            </button>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Wave & Position Filter -->
-                <div class="grid grid-cols-2 gap-4">
+                <div x-show="showFilters" x-collapse class="space-y-5">
+                    <!-- Zodiac Filter -->
                     <div>
-                        <div class="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-2">波色</div>
-                        <div class="flex gap-1">
-                            <button @click="toggleWave('red')"
-                                :class="highlightWaves.includes('red') ? 'bg-[#ff7675] text-white border-transparent' : 'bg-white text-gray-500 border-gray-200'"
-                                class="flex-1 py-1.5 text-xs border rounded transition">红</button>
-                            <button @click="toggleWave('blue')"
-                                :class="highlightWaves.includes('blue') ? 'bg-[#74b9ff] text-white border-transparent' : 'bg-white text-gray-500 border-gray-200'"
-                                class="flex-1 py-1.5 text-xs border rounded transition">蓝</button>
-                            <button @click="toggleWave('green')"
-                                :class="highlightWaves.includes('green') ? 'bg-[#55efc4] text-white border-transparent' : 'bg-white text-gray-500 border-gray-200'"
-                                class="flex-1 py-1.5 text-xs border rounded transition">绿</button>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-2">位置</div>
-                        <div class="flex gap-1 overflow-x-auto">
-                            <template x-for="i in 7">
-                                <button @click="toggleIndex(i-1)"
-                                    :class="highlightIndexes.includes(i-1) ? 'bg-primary text-white border-primary' : 'bg-white text-gray-500 border-gray-200'"
-                                    class="flex-1 py-1.5 text-[10px] min-w-[20px] rounded border transition"
-                                    x-text="i"></button>
+                        <div class="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-2">生肖筛选</div>
+                        <div class="grid grid-cols-6 gap-2">
+                            <template x-for="z in zodiacs">
+                                <button @click="toggleZodiac(z)"
+                                    :class="highlightZodiacs.includes(z) ? 'bg-primary text-white border-primary' : 'bg-white text-gray-500 border-gray-200'"
+                                    class="h-8 flex items-center justify-center text-xs rounded-lg border shadow-sm transition-all active:scale-95"
+                                    x-text="z"></button>
                             </template>
                         </div>
                     </div>
-                </div>
 
-                <div class="pt-2 border-t border-dashed border-gray-100 text-center">
-                    <button @click="clearHighlight()"
-                        class="text-xs font-bold text-accent px-4 py-2 hover:bg-blue-50 rounded transition">
-                        ↺ 重置所有条件
-                    </button>
+                    <!-- Number Filter -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="text-[11px] text-gray-400 uppercase tracking-wider font-bold">号码筛选</div>
+                            <div class="flex items-center gap-2">
+                                <input type="text" x-model="customNumberInput" @input="handleCustomInput"
+                                    placeholder="输入号码(如: 1,5,10)"
+                                    class="text-xs border border-gray-200 rounded px-2 py-1 w-32 focus:outline-none focus:border-accent">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1.5">
+                            <template x-for="n in 49">
+                                <button @click="toggleNumber(n)"
+                                    :class="highlightNumbers.includes(n) ? 'bg-primary text-white border-primary font-bold' : 'bg-white text-gray-400 border-gray-100'"
+                                    class="py-1.5 text-[10px] rounded border transition-all"
+                                    x-text="n < 10 ? '0'+n : n">
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Wave & Position Filter -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-2">波色</div>
+                            <div class="flex gap-1">
+                                <button @click="toggleWave('red')"
+                                    :class="highlightWaves.includes('red') ? 'bg-[#ff7675] text-white border-transparent' : 'bg-white text-gray-500 border-gray-200'"
+                                    class="flex-1 py-1.5 text-xs border rounded transition">红</button>
+                                <button @click="toggleWave('blue')"
+                                    :class="highlightWaves.includes('blue') ? 'bg-[#74b9ff] text-white border-transparent' : 'bg-white text-gray-500 border-gray-200'"
+                                    class="flex-1 py-1.5 text-xs border rounded transition">蓝</button>
+                                <button @click="toggleWave('green')"
+                                    :class="highlightWaves.includes('green') ? 'bg-[#55efc4] text-white border-transparent' : 'bg-white text-gray-500 border-gray-200'"
+                                    class="flex-1 py-1.5 text-xs border rounded transition">绿</button>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-2">位置</div>
+                            <div class="flex gap-1 overflow-x-auto">
+                                <template x-for="i in 7">
+                                    <button @click="toggleIndex(i-1)"
+                                        :class="highlightIndexes.includes(i-1) ? 'bg-primary text-white border-primary' : 'bg-white text-gray-500 border-gray-200'"
+                                        class="flex-1 py-1.5 text-[10px] min-w-[20px] rounded border transition"
+                                        x-text="i"></button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-dashed border-gray-100 text-center">
+                        <button @click="clearHighlight()"
+                            class="text-xs font-bold text-accent px-4 py-2 hover:bg-blue-50 rounded transition">
+                            ↺ 重置所有条件
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -306,16 +331,35 @@
         function lotteryApp() {
             return {
                 loading: true,
+                showFilters: true,
                 analysisRange: 30,
                 zodiacs: ['鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬'],
                 highlightZodiacs: [], highlightWaves: [], highlightIndexes: [], highlightNumbers: [],
+                customNumberInput: '',
                 allRecords: [], filteredRecords: [], displayedRecords: [],
                 selectedYear: new Date().getFullYear().toString(),
                 years: ['2025', '2024', '2023', '2022', '2021', '2020'],
                 page: 1, pageSize: 15, hasMore: true,
 
                 toggleNumber(n) {
-                    this.highlightNumbers.includes(n) ? this.highlightNumbers = this.highlightNumbers.filter(x => x !== n) : this.highlightNumbers.push(n)
+                    if (this.highlightNumbers.includes(n)) {
+                        this.highlightNumbers = this.highlightNumbers.filter(x => x !== n);
+                    } else {
+                        this.highlightNumbers.push(n);
+                    }
+                    this.updateCustomInput();
+                },
+                handleCustomInput() {
+                    // Parse input string "1, 5, 10" -> [1, 5, 10]
+                    const nums = this.customNumberInput.split(/[,，\s]+/)
+                        .map(s => parseInt(s.trim()))
+                        .filter(n => !isNaN(n) && n >= 1 && n <= 49);
+
+                    // Remove duplicates
+                    this.highlightNumbers = [...new Set(nums)];
+                },
+                updateCustomInput() {
+                    this.customNumberInput = this.highlightNumbers.sort((a, b) => a - b).join(',');
                 },
                 toggleZodiac(z) {
                     this.highlightZodiacs.includes(z) ? this.highlightZodiacs = this.highlightZodiacs.filter(x => x !== z) : this.highlightZodiacs.push(z)
@@ -327,7 +371,11 @@
                     this.highlightIndexes.includes(i) ? this.highlightIndexes = this.highlightIndexes.filter(x => x !== i) : this.highlightIndexes.push(i)
                 },
                 clearHighlight() {
-                    this.highlightZodiacs = []; this.highlightWaves = []; this.highlightIndexes = []; this.highlightNumbers = []
+                    this.highlightZodiacs = [];
+                    this.highlightWaves = [];
+                    this.highlightIndexes = [];
+                    this.highlightNumbers = [];
+                    this.customNumberInput = '';
                 },
                 ballDim(b, i) {
                     if (!this.highlightZodiacs.length && !this.highlightWaves.length && !this.highlightIndexes.length && !this.highlightNumbers.length) return false;

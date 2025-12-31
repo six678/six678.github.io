@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>开奖直播 - 158九点半</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- NodePlayer.js SDK (Local) -->
-    <script src="js/NodePlayer.min.js"></script>
+    <!-- flv.js -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/flv.js/1.6.2/flv.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -65,7 +65,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        #video-canvas {
+        #videoElement {
             position: absolute;
             top: 0;
             left: 0;
@@ -106,6 +106,12 @@
             align-items: center;
             z-index: 10;
             cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .play-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .play-btn {
@@ -131,6 +137,28 @@
             border-width: 10px 0 10px 18px;
             border-color: transparent transparent transparent white;
             margin-left: 4px;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            z-index: 5;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
         }
     </style>
 </head>
@@ -198,7 +226,8 @@
             </div>
 
             <div class="video-container">
-                <canvas id="video-canvas"></canvas>
+                <video id="videoElement" controls playsinline webkit-playsinline></video>
+                <div id="loading-spinner" class="loading-spinner"></div>
                 <div id="play-overlay" class="play-overlay" onclick="startPlay()">
                     <div class="play-btn">
                         <div class="play-icon"></div>
@@ -247,79 +276,92 @@
             overlay.classList.toggle('hidden');
         }
 
-        // NodePlayer Setup
-        let player = null;
+        // FLV Player Setup
+        let flvPlayer = null;
         const videoSrcs = [
             'https://play3636.zdwafis.com/live/mosixmark.flv',
             'https://play888.00853lhc.live/live/mosixmark.flv'
         ];
         let currentLine = 0;
-        let isPlaying = false;
+        const videoElement = document.getElementById('videoElement');
+        const statusEl = document.getElementById('status');
+        const overlay = document.getElementById('play-overlay');
+        const loadingSpinner = document.getElementById('loading-spinner');
 
         function initPlayer(url) {
-            const statusEl = document.getElementById('status');
-            const overlay = document.getElementById('play-overlay');
+            if (flv.isSupported()) {
+                if (flvPlayer) {
+                    flvPlayer.destroy();
+                }
 
-            if (player) {
-                player.stop();
-            } else {
-                // 移动端音频引擎激活
-                NodePlayer.load(() => {
-                    if (/(Android)|(iOS)/i.test(navigator.userAgent)) {
-                        NodePlayer.activeAudioEngine(true);
-                    }
-
-                    player = new NodePlayer();
-                    player.setView('video-canvas');
-                    player.setBufferTime(1000); // 增加缓冲时间以提高稳定性
-                    player.setScaleMode(1); // 缩放模式：1 为等比缩放
-                    player.setKeepScreenOn(); // 保持屏幕常亮
-                    player.setAutoReconnect(true); // 自动重连
-
-                    player.on('start', () => {
-                        console.log('播放开始');
-                        statusEl.innerHTML = '<span class="text-green">● 直播中</span>';
-                        overlay.style.display = 'none';
-                        isPlaying = true;
-                    });
-
-                    player.on('stop', () => {
-                        console.log('播放停止');
-                        statusEl.innerHTML = '<span class="text-gray-500">● 已停止</span>';
-                        overlay.style.display = 'flex';
-                        isPlaying = false;
-                    });
-
-                    player.on('error', (e) => {
-                        console.error('播放器错误:', e);
-                        statusEl.innerHTML = '<span class="text-red">● 连接异常，正在重试...</span>';
-                        // 自动重连机制已启用，这里仅更新 UI
-                    });
-
-                    // 首次加载后尝试播放
-                    startPlay();
+                flvPlayer = flv.createPlayer({
+                    type: 'flv',
+                    url: url,
+                    isLive: true,
+                    hasAudio: true,
+                    hasVideo: true,
+                    enableWorker: true,
+                    enableStashBuffer: false,
+                    stashInitialSize: 128
                 });
-                return; // 等待 load 回调
-            }
 
-            // 如果 player 已经初始化，直接播放新 URL
-            startPlay(url);
+                flvPlayer.attachMediaElement(videoElement);
+
+                flvPlayer.on(flv.Events.LOADING_COMPLETE, () => {
+                    console.log('加载完成');
+                });
+
+                flvPlayer.on(flv.Events.ERROR, (errType, errDetail) => {
+                    console.error('播放器错误:', errType, errDetail);
+                    statusEl.innerHTML = '<span class="text-red">● 连接异常</span>';
+                    loadingSpinner.style.display = 'none';
+                    overlay.classList.remove('hidden');
+                });
+
+                flvPlayer.load();
+
+                // 尝试播放
+                const playPromise = flvPlayer.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('自动播放成功');
+                        onPlaySuccess();
+                    }).catch(error => {
+                        console.log('自动播放被阻止，等待用户交互');
+                        overlay.classList.remove('hidden');
+                        loadingSpinner.style.display = 'none';
+                    });
+                }
+            } else {
+                statusEl.innerHTML = '<span class="text-red">● 您的浏览器不支持 FLV 播放</span>';
+            }
         }
 
-        function startPlay(url) {
-            const targetUrl = url || videoSrcs[currentLine];
-            if (!player) return;
+        function onPlaySuccess() {
+            statusEl.innerHTML = '<span class="text-green">● 直播中</span>';
+            overlay.classList.add('hidden');
+            loadingSpinner.style.display = 'none';
+        }
 
-            try {
-                player.start(targetUrl);
-            } catch (err) {
-                console.error('启动播放器失败:', err);
-                const statusEl = document.getElementById('status');
-                statusEl.innerHTML = '<span class="text-red">● 初始化失败</span>';
+        function startPlay() {
+            const url = videoSrcs[currentLine];
+            loadingSpinner.style.display = 'block';
+            overlay.classList.add('hidden');
+
+            if (!flvPlayer) {
+                initPlayer(url);
+            } else {
+                flvPlayer.play().then(onPlaySuccess).catch(e => {
+                    console.error('播放失败', e);
+                    loadingSpinner.style.display = 'none';
+                    overlay.classList.remove('hidden');
+                });
             }
         }
 
         function switchLine(index) {
+            if (currentLine === index && flvPlayer) return;
+
             currentLine = index;
             // 更新按钮样式
             for (let i = 0; i < videoSrcs.length; i++) {
@@ -333,24 +375,25 @@
                 }
             }
 
-            // 如果正在播放，直接切换；否则只更新当前线路索引，等待用户点击播放
-            if (player) {
-                startPlay(videoSrcs[index]);
-            }
+            statusEl.innerHTML = '<span class="text-gray-500">● 切换线路中...</span>';
+            loadingSpinner.style.display = 'block';
+
+            // 重新初始化播放器
+            initPlayer(videoSrcs[index]);
         }
 
+        // 监听视频元素的事件
+        videoElement.addEventListener('playing', () => {
+            onPlaySuccess();
+        });
+
+        videoElement.addEventListener('waiting', () => {
+            loadingSpinner.style.display = 'block';
+        });
+
         document.addEventListener('DOMContentLoaded', function () {
-            // 检查 NodePlayer 是否已加载
-            if (typeof NodePlayer !== 'undefined') {
-                initPlayer(videoSrcs[0]);
-            } else {
-                // 如果脚本是异步加载的，可能需要轮询或监听 load 事件
-                // 这里假设是同步加载或已缓存
-                // 再次尝试通过 load 回调初始化
-                NodePlayer.load(() => {
-                    initPlayer(videoSrcs[0]);
-                });
-            }
+            // 页面加载时不自动播放，等待用户点击
+            // 但可以预加载一些东西如果需要
         });
     </script>
 </body>
