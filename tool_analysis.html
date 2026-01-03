@@ -147,6 +147,7 @@
                         <div class="relative" @click.stop>
                             <select x-model="selectedYear" @change="resetPagination()"
                                 class="appearance-none bg-blue-50 text-accent text-xs pl-3 pr-8 py-1.5 rounded-lg font-bold outline-none">
+                                <option value="">全部年份</option>
                                 <template x-for="y in years">
                                     <option :value="y" x-text="y+'年'"></option>
                                 </template>
@@ -337,7 +338,7 @@
                 highlightZodiacs: [], highlightWaves: [], highlightIndexes: [], highlightNumbers: [],
                 customNumberInput: '',
                 allRecords: [], filteredRecords: [], displayedRecords: [],
-                selectedYear: new Date().getFullYear().toString(),
+                selectedYear: '',
                 years: ['2026', '2025', '2024', '2023', '2022', '2021', '2020'],
                 page: 1, pageSize: 15, hasMore: true,
 
@@ -422,7 +423,11 @@
                     } catch (e) { console.error(e); alert("无法加载数据，请确保目录下有 data.json 文件"); } finally { this.loading = false; }
                 },
                 resetPagination() {
-                    this.filteredRecords = this.allRecords.filter(i => i.openTime.includes(this.selectedYear));
+                    if (this.selectedYear) {
+                        this.filteredRecords = this.allRecords.filter(i => i.openTime.includes(this.selectedYear));
+                    } else {
+                        this.filteredRecords = [...this.allRecords];
+                    }
                     this.page = 1; this.displayedRecords = []; this.hasMore = true; this.loadMore();
                 },
                 loadMore() {
