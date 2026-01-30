@@ -175,6 +175,8 @@
                 onclick="switchTab('stats', this)">📊 号码统计</div>
             <div class="flex-1 text-center py-2 text-sm font-semibold text-gray-500 rounded-lg cursor-pointer transition-all"
                 onclick="switchTab('filter', this)">🛡️ 选号过滤</div>
+            <div class="flex-1 text-center py-2 text-sm font-semibold text-gray-500 rounded-lg cursor-pointer transition-all"
+                onclick="switchTab('color-group', this)">🎨 波色分组</div>
         </nav>
     </div>
 
@@ -381,6 +383,32 @@
         </div>
     </div>
 
+    <!-- Color Group Tab -->
+    <div id="tab-color-group" class="px-4 space-y-4 hidden animate-fade-in">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-50">
+            <textarea id="colorGroupInput"
+                class="w-full h-60 p-4 border border-gray-200 rounded-xl bg-gray-50 font-mono text-sm resize-none focus:border-accent focus:bg-white outline-none transition-colors"
+                oninput="analyzeColorGroup()"
+                placeholder="在此输入号码进行波色分组...&#10;支持格式:01 05 12 23 30...&#10;或直接粘贴多行号码"></textarea>
+            <div class="flex gap-2.5 mt-4">
+                <button
+                    class="flex-1 h-11 bg-green text-white font-semibold rounded-xl shadow-lg shadow-green/30 active:scale-95 transition-transform flex items-center justify-center gap-1.5"
+                    onclick="analyzeColorGroup()">
+                    ▶ 开始分组
+                </button>
+                <button id="btnCopyAllColorGroups"
+                    class="flex-1 h-11 bg-accent text-white font-semibold rounded-xl shadow-lg shadow-accent/30 active:scale-95 transition-transform hidden items-center justify-center gap-1.5"
+                    onclick="copyAllColorGroups()">
+                    📋 一键复制
+                </button>
+                <button
+                    class="flex-[0.4] h-11 bg-gray-400 text-white font-semibold rounded-xl active:scale-95 transition-transform"
+                    onclick="clearColorGroup()">清空</button>
+            </div>
+        </div>
+        <div id="colorGroupOutput" class="space-y-2.5"></div>
+    </div>
+
     <script>
         function toggleMenu() {
             const menu = document.getElementById('navMenu');
@@ -407,6 +435,7 @@
         window.switchTab = function (tabName, el) {
             document.getElementById('tab-stats').classList.add('hidden');
             document.getElementById('tab-filter').classList.add('hidden');
+            document.getElementById('tab-color-group').classList.add('hidden');
             document.getElementById('tab-' + tabName).classList.remove('hidden');
 
             document.querySelectorAll('nav div').forEach(div => {
@@ -688,6 +717,132 @@
             document.getElementById('customFilterInput').value = '';
             document.getElementById('customIncludeInput').value = '';
             renderGrid();
+        }
+
+        // 波色分组功能
+        const colorWaves = {
+            red: [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
+            green: [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49],
+            blue: [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48]
+        };
+
+        let colorGroupTextForCopy = "";
+
+        window.analyzeColorGroup = function () {
+            const input = document.getElementById('colorGroupInput');
+            const output = document.getElementById('colorGroupOutput');
+
+            // 提取所有号码
+            const numRegex = /\b(0?[1-9]|[1-4][0-9])\b/g;
+            const numMatches = input.value.match(numRegex) || [];
+
+            output.innerHTML = '';
+
+            if (numMatches.length === 0) {
+                output.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm">⚠️ 请先输入有效号码</div>';
+                return;
+            }
+
+            // 转换为数字并去重
+            const numbers = [...new Set(numMatches.map(m => parseInt(m, 10)).filter(n => n >= 1 && n <= 49))];
+
+            // 基础分组 - 按单一波色分类
+            const basicGroups = {
+                R: [],    // 红波
+                G: [],    // 绿波
+                B: []     // 蓝波
+            };
+
+            numbers.forEach(num => {
+                if (colorWaves.red.includes(num)) basicGroups.R.push(num);
+                else if (colorWaves.green.includes(num)) basicGroups.G.push(num);
+                else if (colorWaves.blue.includes(num)) basicGroups.B.push(num);
+            });
+
+            // 组合分组 - 检查是否同时包含两种波色
+            const comboGroups = {
+                RG: [],   // 红波 + 绿波
+                RB: [],   // 红波 + 蓝波
+                GB: []    // 绿波 + 蓝波
+            };
+
+            // 如果同时存在红波和绿波号码,合并到RG组
+            if (basicGroups.R.length > 0 && basicGroups.G.length > 0) {
+                comboGroups.RG = [...basicGroups.R, ...basicGroups.G].sort((a, b) => a - b);
+            }
+
+            // 如果同时存在红波和蓝波号码,合并到RB组
+            if (basicGroups.R.length > 0 && basicGroups.B.length > 0) {
+                comboGroups.RB = [...basicGroups.R, ...basicGroups.B].sort((a, b) => a - b);
+            }
+
+            // 如果同时存在绿波和蓝波号码,合并到GB组
+            if (basicGroups.G.length > 0 && basicGroups.B.length > 0) {
+                comboGroups.GB = [...basicGroups.G, ...basicGroups.B].sort((a, b) => a - b);
+            }
+
+            // 生成输出
+            const groupConfig = [
+                { key: 'R', name: 'R', color: 'text-red', bgColor: 'bg-red-50', borderColor: 'border-red-100', data: basicGroups.R },
+                { key: 'G', name: 'G', color: 'text-green', bgColor: 'bg-green-50', borderColor: 'border-green-100', data: basicGroups.G },
+                { key: 'B', name: 'B', color: 'text-accent', bgColor: 'bg-blue-50', borderColor: 'border-blue-100', data: basicGroups.B },
+                { key: 'RG', name: 'RG', color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-100', data: comboGroups.RG },
+                { key: 'RB', name: 'RB', color: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-100', data: comboGroups.RB },
+                { key: 'GB', name: 'GB', color: 'text-teal-600', bgColor: 'bg-teal-50', borderColor: 'border-teal-100', data: comboGroups.GB }
+            ];
+
+            let html = '';
+            let plainText = '【分组结果】\n';
+            groupConfig.forEach(config => {
+                const nums = config.data.sort((a, b) => a - b);
+                if (nums.length > 0) {
+                    const fmtNums = nums.map(n => n < 10 ? '0' + n : n);
+                    const numsStr = fmtNums.join(', ');
+                    const groupCopyText = `${config.name}(共${nums.length}个): ${fmtNums.join(', ')}`;
+
+                    html += `
+                    <div class="bg-white p-3 rounded-xl shadow-sm border ${config.borderColor} ${config.bgColor}">
+                        <div class="flex justify-between items-center text-xs uppercase tracking-wide mb-1.5">
+                            <span class="${config.color} font-bold">${config.name} - 共 ${nums.length} 个</span>
+                            <button class="bg-white text-accent px-2 py-1 rounded-md font-bold active:scale-95 transition-transform border border-gray-200" 
+                                    onclick="copyColorGroup('${groupCopyText}', this)">复制</button>
+                        </div>
+                        <div class="font-mono text-base leading-relaxed break-all ${config.color} font-semibold">
+                            ${numsStr}
+                        </div>
+                    </div>`;
+                    plainText += `${config.name}(共${nums.length}个): ${numsStr}\n`;
+                }
+            });
+
+            if (html === '') {
+                output.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm">⚠️ 没有找到符合波色的号码</div>';
+                colorGroupTextForCopy = '';
+                document.getElementById('btnCopyAllColorGroups').classList.add('hidden');
+                document.getElementById('btnCopyAllColorGroups').classList.remove('flex');
+            } else {
+                output.innerHTML = html;
+                colorGroupTextForCopy = plainText;
+                document.getElementById('btnCopyAllColorGroups').classList.remove('hidden');
+                document.getElementById('btnCopyAllColorGroups').classList.add('flex');
+            }
+        }
+
+        window.copyColorGroup = function (text, btn) {
+            const originalText = btn.innerText;
+            copyTextToClipboard(text, btn, true);
+        }
+
+        window.copyAllColorGroups = function () {
+            copyTextToClipboard(colorGroupTextForCopy, document.getElementById('btnCopyAllColorGroups'));
+        }
+
+        window.clearColorGroup = function () {
+            document.getElementById('colorGroupInput').value = '';
+            document.getElementById('colorGroupOutput').innerHTML = '';
+            colorGroupTextForCopy = '';
+            document.getElementById('btnCopyAllColorGroups').classList.add('hidden');
+            document.getElementById('btnCopyAllColorGroups').classList.remove('flex');
         }
     </script>
 </body>
