@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>158930.Com-数据分析中心</title>
+  <!-- 引入 Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --success-color: #4cc9f0;
+      --error-color: #f72585;
+      --bg-color: #f8f9fa;
+      --sidebar-bg: #1e1e2d;
+      --card-bg: #ffffff;
+      --text-main: #2c3e50;
+      --text-dim: #7f8c8d;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 移动端菜单按钮 */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      color: white;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.4);
+      z-index: 2000;
+      border: none;
+      cursor: pointer;
+      font-size: 24px;
+    }
+
+    /* 侧边栏样式 */
+    .sidebar {
+      width: 320px;
+      background-color: var(--sidebar-bg);
+      color: #fff;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      font-size: 20px;
+      margin-bottom: 30px;
+      color: #4cc9f0;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    .param-group {
+      margin-bottom: 20px;
+    }
+
+    .param-group label {
+      display: block;
+      font-size: 13px;
+      color: #a2a2c2;
+      margin-bottom: 8px;
+    }
+
+    .sidebar input[type="number"],
+    .sidebar input[type="date"],
+    .sidebar select {
+      width: 100%;
+      background: #2b2b40;
+      border: 1px solid #3f3f5f;
+      padding: 10px;
+      border-radius: 6px;
+      color: #fff;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    .sidebar input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .sidebar .btn-analyze {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 20px;
+      transition: all 0.3s;
+    }
+
+    .sidebar .btn-analyze:hover {
+      background-color: #3046bc;
+      transform: translateY(-2px);
+    }
+
+    /* 主体内容区域 */
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* 统计卡片 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+
+    .stat-card .value {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .label {
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    /* 图表容器 */
+    .chart-section {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      height: 300px;
+    }
+
+    /* 表格区域 */
+    .table-section {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      flex: 1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background-color: #f8f9fc;
+      text-align: left;
+      padding: 12px;
+      font-size: 13px;
+      color: var(--text-dim);
+      border-bottom: 2px solid #edeff5;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #f1f3f9;
+      font-size: 14px;
+    }
+
+    .hit {
+      color: #27ae60;
+      font-weight: bold;
+    }
+
+    .miss {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    /* 最优策略列表样式 */
+    .strategy-list {
+      margin-top: 20px;
+      border-top: 1px solid #3f3f5f;
+      padding-top: 20px;
+    }
+
+    .strategy-list h3 {
+      font-size: 14px;
+      color: #4cc9f0;
+      margin-bottom: 12px;
+    }
+
+    .strategy-item {
+      background: #2b2b40;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .strategy-item:hover {
+      border-color: var(--primary-color);
+      background: #343452;
+    }
+
+    .strategy-item.active {
+      border-color: var(--primary-color);
+      background: var(--primary-color);
+    }
+
+    .strategy-item .profit {
+      font-weight: bold;
+      color: #27ae60;
+      font-size: 13px;
+    }
+
+    .strategy-item .meta {
+      font-size: 11px;
+      color: #a2a2c2;
+      margin-top: 4px;
+    }
+
+    .loading-mask {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      display: none;
+    }
+
+    /* 响应式媒体查询 */
+    @media (max-width: 850px) {
+      body {
+        flex-direction: column;
+        height: auto;
+        overflow: auto;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        padding: 20px;
+        box-shadow: none;
+        box-sizing: border-box;
+      }
+
+      .sidebar.collapsed {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: flex;
+      }
+
+      .main-content {
+        padding: 15px;
+        overflow: visible;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .stat-card {
+        padding: 15px;
+      }
+
+      .stat-card .value {
+        font-size: 18px;
+      }
+
+      .chart-section {
+        height: 250px;
+        padding: 15px;
+      }
+
+      .table-section {
+        padding: 15px;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 600px;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 开奖记录浮窗按钮样式可选，目前直接放在 Tab 里或独立成块 */
+  </style>
+</head>
+
+<body>
+
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">⚙️</button>
+
+  <div class="sidebar" id="sidebar">
+    <h2>📊 分析中心</h2>
+
+    <div class="param-group">
+      <label>起始日期</label>
+      <input type="date" id="startDate" value="2026-01-01">
+    </div>
+
+    <div class="param-group">
+      <label>结束日期</label>
+      <input type="date" id="endDate">
+    </div>
+
+    <div class="param-group">
+      <label>起始偏移天数</label>
+      <input type="number" id="startOffsetDays" value="1">
+    </div>
+
+    <div class="param-group">
+      <label>参考偏移天数</label>
+      <input type="number" id="referOffsetDays" value="30">
+    </div>
+
+    <div class="param-group">
+      <label>排除天数</label>
+      <input type="number" id="excludingDays" value="30">
+    </div>
+
+    <div class="param-group">
+      <label>排除偏移天数</label>
+      <input type="number" id="excludingOffsetDays" value="1">
+    </div>
+
+    <div class="param-group">
+      <label>分析号码位置</label>
+      <select id="targetPos" onchange="renderStrategies()">
+        <option value="0">平码 1</option>
+        <option value="1">平码 2</option>
+        <option value="2">平码 3</option>
+        <option value="3">平码 4</option>
+        <option value="4">平码 5</option>
+        <option value="5">平码 6</option>
+        <option value="6" selected>特码 (第7位)</option>
+      </select>
+    </div>
+
+    <div class="param-group">
+      <label>单柱投入 (元)</label>
+      <input type="number" id="amountPerItem" value="50">
+    </div>
+
+    <div class="param-group">
+      <label>
+        <input type="checkbox" id="isReverse"> 取反逻辑
+      </label>
+    </div>
+
+    <button class="btn-analyze" onclick="runAnalysis()">开始全面分析</button>
+
+    <div class="strategy-list" id="bestStrategyList">
+      <h3>🏆 最优策略推荐 (Top 8)</h3>
+      <div id="strategyContainer">
+        <p style="font-size: 12px; color: #777;">正在计算最优组合...</p>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; font-size: 12px; color: #555; text-align: center;">
+      <p>数据源: data.json</p>
+      <p id="dataCount">正在加载数据...</p>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- 下期预测 -->
+    <div id="nextRoundCard" class="stat-card"
+      style="grid-column: span 1; background: linear-gradient(135deg, #4361ee, #4cc9f0); color: white; text-align: left; padding: 24px; display:none; margin-bottom: 0;">
+      <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+        <span>🔮 下一期投注建议</span>
+      </div>
+      <div id="nextPredictionNums"
+        style="font-size: 18px; font-weight: bold; letter-spacing: 0.5px; line-height: 1.4; word-break: break-all;">
+        正在计算...
+      </div>
+      <div id="nextPredictionInfo"
+        style="font-size: 11px; margin-top: 12px; opacity: 0.8; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px;">
+        基于最新开奖数据实时分析
+      </div>
+    </div>
+
+    <!-- 统计概览 -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="value" id="statProfit">--</div>
+        <div class="label">总盈利 (元)</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statHitRate">--</div>
+        <div class="label">平均命中率</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statHitCount">--</div>
+        <div class="label">命中/总期数</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statAvgNums">--</div>
+        <div class="label">平均投注数</div>
+      </div>
+    </div>
+
+    <!-- 增长趋势图 -->
+    <div class="chart-section">
+      <canvas id="profitChart"></canvas>
+    </div>
+
+    <!-- 详情表格 -->
+    <div class="table-section">
+      <h3 style="margin-top: 0;">分析详情</h3>
+      <div class="table-wrapper" style="overflow-y: auto; max-height: 400px;">
+        <table id="detailsTable">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>中奖号</th>
+              <th>投注数</th>
+              <th>结果</th>
+              <th>盈利</th>
+              <th>累计盈亏</th>
+              <th>详情</th>
+            </tr>
+          </thead>
+          <tbody id="detailsBody">
+            <tr>
+              <td colspan="7" style="text-align:center; color:#999;">请先点击开始分析</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading" class="loading-mask">🔥 正在深度回测中...</div>
+
+  <script>
+    // --- 核心引擎数据结构 ---
+    let historyArray = [];
+    let dateToIndex = new Map();
+    let allStrategies = []; // 全局缓存寻优结果
+    const allNumbers = Array.from({ length: 49 }).map((_, i) => i + 1);
+    let myChart = null;
+
+    // --- 初始化: 加载数据 ---
+    async function loadData() {
+      try {
+        const res = await fetch("data.json");
+        const jsonData = await res.json();
+
+        const tempRecords = [];
+        for (const item of jsonData) {
+          if (!item.openTime || !item.openCode) continue;
+
+          // 提取日期部分 (YYYY-MM-DD)
+          const dStr = item.openTime.split(" ")[0];
+
+          // 解析号码
+          const nums = item.openCode.split(",").map(n => parseInt(n.trim()));
+
+          if (nums.length >= 7 && !nums.some(isNaN)) {
+            tempRecords.push({ date: dStr, nums: nums });
+          }
+        }
+
+        // 按日期升序排列 (方便从前往后计算轨迹)
+        historyArray = tempRecords.sort((a, b) => a.date.localeCompare(b.date));
+
+        // 建立索引
+        dateToIndex.clear();
+        historyArray.forEach((r, i) => dateToIndex.set(r.date, i));
+
+        document.getElementById('dataCount').textContent = `成功加载 ${historyArray.length} 条记录`;
+        document.getElementById('endDate').value = historyArray[historyArray.length - 1].date;
+
+        // 加载寻优参数
+        await loadBestParams();
+
+        console.log("Ready.");
+      } catch (e) {
+        console.error(e);
+        alert("加载数据失败，请确保目录下有 Amc_all.csv");
+      }
+    }
+
+    // --- 加载最优参数 ---
+    async function loadBestParams() {
+      try {
+        const res = await fetch("optimization_results.csv");
+        if (!res.ok) return;
+
+        const text = await res.text();
+        const rows = text.trim().split("\n");
+        if (rows.length < 2) return;
+
+        const header = rows[0].split(",").map(h => h.trim());
+
+        // 解析并存储所有策略
+        allStrategies = rows.slice(1).map(row => {
+          const cols = row.split(",");
+          const paramMap = {};
+          header.forEach((h, i) => paramMap[h] = cols[i].trim());
+          return paramMap;
+        });
+
+        console.log(`成功加载 ${allStrategies.length} 条寻优策略`);
+        renderStrategies(); // 初始渲染
+
+      } catch (e) {
+        console.warn("未能加载寻优结果:", e);
+        document.getElementById('strategyContainer').innerHTML = '<p style="font-size: 12px; color: #f72585;">无法加载历史优化数据</p>';
+      }
+    }
+
+    // 根据当前选中的位置渲染前 8 条策略
+    function renderStrategies() {
+      const currentPos = document.getElementById('targetPos').value;
+      const strategyContainer = document.getElementById('strategyContainer');
+      strategyContainer.innerHTML = '';
+
+      // 过滤当前位置的策略
+      const filtered = allStrategies
+        .filter(s => s.targetPos === currentPos)
+        .slice(0, 8);
+
+      if (filtered.length === 0) {
+        strategyContainer.innerHTML = '<p style="font-size: 12px; color: #777;">当前位置暂无寻优结果</p>';
+        return;
+      }
+
+      filtered.forEach((paramMap, index) => {
+        const div = document.createElement('div');
+        div.className = 'strategy-item' + (index === 0 ? ' active' : '');
+        div.onclick = () => applyParams(paramMap, div);
+
+        div.innerHTML = `
+          <div class="profit">利润: ${parseFloat(paramMap.Profit).toLocaleString()} 元</div>
+          <div class="meta">
+            胜率: ${(parseFloat(paramMap.HitRate)).toFixed(1)}% | 
+            sOff:${paramMap.startOffsetDays}, rOff:${paramMap.referOffsetDays}, eD:${paramMap.excludingDays}, eOff:${paramMap.excludingOffsetDays}
+          </div>
+        `;
+        strategyContainer.appendChild(div);
+
+        // 切换位置后的点击反馈可选：此处我们不默认运行，只应用参数。
+        // 如果希望切换位置自动运行第一条，可以开启下面这行：
+        if (index === 0) applyParams(paramMap, div, false);
+      });
+    }
+
+    function applyParams(params, element, autoRun = true) {
+      if (!params) return;
+
+      // 切换样式
+      document.querySelectorAll('.strategy-item').forEach(el => el.classList.remove('active'));
+      if (element) element.classList.add('active');
+
+      // 应用值（不应用 targetPos，因为列表是根据 targetPos 过滤出来的）
+      if (params.startOffsetDays) document.getElementById('startOffsetDays').value = params.startOffsetDays;
+      if (params.referOffsetDays) document.getElementById('referOffsetDays').value = params.referOffsetDays;
+      if (params.excludingDays) document.getElementById('excludingDays').value = params.excludingDays;
+      if (params.excludingOffsetDays) document.getElementById('excludingOffsetDays').value = params.excludingOffsetDays;
+      if (params.isReverse) document.getElementById('isReverse').checked = (params.isReverse.toLowerCase() === 'true');
+
+      if (autoRun) {
+        runAnalysis();
+      }
+    }
+
+    // --- 高性能原子逻辑 $O(1)$ ---
+    function getOffsetDate(date, offset) {
+      const idx = dateToIndex.get(date);
+      if (idx === undefined) return null;
+      const targetIdx = idx + offset;
+      if (targetIdx < 0 || targetIdx >= historyArray.length) return null;
+      return historyArray[targetIdx];
+    }
+
+    // 重构为基于索引的计算逻辑，支持预测（targetIdx 可以等于 historyArray.length）
+    function calculateFinalByIndex(targetIdx, params) {
+      const { startOffset, referOffset, exclDays, exclOffset, isReverse, targetPos } = params;
+
+      // 1. 参考 record (相对于目标期数)
+      const referIdx = targetIdx - startOffset;
+      if (referIdx < 0 || referIdx >= historyArray.length) return null;
+      const referRecord = historyArray[referIdx];
+      const referNum = referRecord.nums[targetPos]; // 使用指定位置的号码
+
+      // 2. 搜索回溯 (从参考期的偏移位置开始往回找相同号码)
+      const searchStartIdx = referIdx - referOffset;
+      if (searchStartIdx < 0) return null;
+
+      let exclReferIdx = -1;
+      for (let i = searchStartIdx; i >= 0; i--) {
+        if (historyArray[i].nums[targetPos] === referNum) {
+          exclReferIdx = i;
+          break;
+        }
+      }
+      if (exclReferIdx === -1) return null;
+
+      // 3. 确定排除序列的起点
+      const indexGap = exclReferIdx - targetIdx;
+      const actualOffset = Math.max(-exclOffset, indexGap + 1);
+
+      const exclStartIdx = exclReferIdx + actualOffset;
+      if (exclStartIdx < 0 || exclStartIdx >= historyArray.length) return null;
+
+      // 4. 收集排除数字
+      const exclSet = new Set();
+      for (let i = exclStartIdx; i > Math.max(-1, exclStartIdx - exclDays); i--) {
+        exclSet.add(historyArray[i].nums[targetPos]);
+      }
+
+      const sortedExcl = [...exclSet].sort((a, b) => a - b);
+      if (isReverse) return sortedExcl;
+
+      return allNumbers.filter(n => !exclSet.has(n));
+    }
+
+    function calculateFinal(currentDate, params) {
+      const idx = dateToIndex.get(currentDate);
+      if (idx === undefined) return null;
+      return calculateFinalByIndex(idx, params);
+    }
+
+    // --- 批量回测逻辑 ---
+    function runAnalysis() {
+      const params = {
+        start: document.getElementById('startDate').value,
+        end: document.getElementById('endDate').value,
+        startOffset: parseInt(document.getElementById('startOffsetDays').value),
+        referOffset: parseInt(document.getElementById('referOffsetDays').value),
+        exclDays: parseInt(document.getElementById('excludingDays').value),
+        exclOffset: parseInt(document.getElementById('excludingOffsetDays').value),
+        amount: parseInt(document.getElementById('amountPerItem').value),
+        isReverse: document.getElementById('isReverse').checked,
+        targetPos: parseInt(document.getElementById('targetPos').value),
+        hitOdds: 47
+      };
+
+      document.getElementById('loading').style.display = 'flex';
+
+      // 使用 setTimeout 避免 UI 瞬间卡顿
+      setTimeout(() => {
+        const results = [];
+        let totalProfit = 0;
+        let hitCount = 0;
+        let totalNums = 0;
+
+        // 筛选范围
+        const filtered = historyArray.filter(r => r.date >= params.start && r.date <= params.end);
+
+        filtered.forEach(record => {
+          const finalNums = calculateFinal(record.date, params);
+          if (!finalNums) return;
+
+          const currentNum = record.nums[params.targetPos];
+          const isHit = finalNums.includes(currentNum);
+          const profit = isHit ?
+            params.amount * (params.hitOdds - finalNums.length) :
+            -params.amount * finalNums.length;
+
+          totalProfit += profit;
+          if (isHit) hitCount++;
+          totalNums += finalNums.length;
+
+          results.push({
+            date: record.date,
+            win: currentNum,
+            count: finalNums.length,
+            isHit,
+            profit,
+            cumulative: totalProfit,
+            details: finalNums.join(', ')
+          });
+        });
+
+        updateUI(results, totalProfit, hitCount, totalNums / (results.length || 1));
+
+        // --- 下期预测逻辑 ---
+        const nextIdx = historyArray.length;
+        const nextNums = calculateFinalByIndex(nextIdx, params);
+        const nextCard = document.getElementById('nextRoundCard');
+        if (nextNums) {
+          nextCard.style.display = 'block';
+          document.getElementById('nextPredictionNums').textContent = `（${nextNums.length}个） ${nextNums.join(',  ')}`;
+          const latest = historyArray[historyArray.length - 1];
+          const posLabel = document.getElementById('targetPos').options[params.targetPos].text;
+          document.getElementById('nextPredictionInfo').textContent = `参考最新数据: ${latest.date} (${posLabel}: ${latest.nums[params.targetPos]})`;
+        } else {
+          nextCard.style.display = 'none';
+        }
+
+        document.getElementById('loading').style.display = 'none';
+      }, 50);
+    }
+
+    function updateUI(results, totalProfit, hitCount, avgNums) {
+      // 1. 更新卡片
+      const hitRate = results.length > 0 ? (hitCount / results.length * 100).toFixed(2) : 0;
+      document.getElementById('statProfit').textContent = totalProfit.toLocaleString();
+      document.getElementById('statProfit').style.color = totalProfit >= 0 ? '#27ae60' : '#e74c3c';
+      document.getElementById('statHitRate').textContent = hitRate + '%';
+      document.getElementById('statHitCount').textContent = `${hitCount}/${results.length}`;
+      document.getElementById('statAvgNums').textContent = avgNums.toFixed(1);
+
+      // 2. 更新图表
+      const labels = results.map(r => r.date);
+      const data = results.map(r => r.cumulative);
+
+      if (myChart) myChart.destroy();
+      const ctx = document.getElementById('profitChart').getContext('2d');
+      myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '累计盈利曲线',
+            data: data,
+            borderColor: '#4361ee',
+            backgroundColor: 'rgba(67, 97, 238, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { display: false },
+            y: { grid: { color: '#f0f0f0' } }
+          }
+        }
+      });
+
+      // 3. 更新表格
+      const body = document.getElementById('detailsBody');
+      body.innerHTML = '';
+      results.reverse().forEach(r => {
+        const tr = document.createElement('tr');
+        const currentNum = r.win;
+        tr.innerHTML = `
+                    <td>${r.date}</td>
+                    <td>${currentNum}</td>
+                    <td>${r.count}</td>
+                    <td class="${r.isHit ? 'hit' : 'miss'}">${r.isHit ? '命中' : '未中'}</td>
+                    <td style="color: ${r.profit >= 0 ? '#27ae60' : '#e74c3c'}">${r.profit}</td>
+                    <td style="font-weight: bold; color: ${r.cumulative >= 0 ? '#27ae60' : '#e74c3c'}">${r.cumulative.toLocaleString()}</td>
+                    <td style="font-size:11px; color:#777;">${r.details}</td>
+                `;
+        body.appendChild(tr);
+      });
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('collapsed');
+
+      // 平滑滚动回顶部
+      if (!sidebar.classList.contains('collapsed')) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // 默认在移动端折叠侧边栏
+    if (window.innerWidth <= 850) {
+      document.getElementById('sidebar').classList.add('collapsed');
+    }
+
+    // 启动加载
+    loadData();
+  </script>
+</body>
+
+</html>
