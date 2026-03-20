@@ -1,5 +1,26 @@
 [
   {
+    "expect": "2026079",
+    "openTime": "2026-03-20 21:32:32",
+    "type": "8",
+    "openCode": "49,34,06,20,04,43,35",
+    "wave": "green,red,green,blue,blue,green,red",
+    "zodiac": "馬,雞,牛,豬,兔,鼠,猴",
+    "oddEven": null,
+    "allOddEven": null,
+    "bigSmall": null,
+    "allBigSmall": null,
+    "firstsecend": 0,
+    "left3": null,
+    "mid3": null,
+    "right3": null,
+    "pet": null,
+    "pk": null,
+    "vs": null,
+    "verify": false,
+    "info": "macaujc.com 接口數據來源、邮件技術支持：service@macaujc.com"
+  },
+  {
     "expect": "2026078",
     "openTime": "2026-03-19 21:32:32",
     "type": "8",
